@@ -2,10 +2,11 @@
 library(ggmap)
 library(opencage)
 
-#provide API access keys
-api <- "AIzaSyAbnojjgn7JcbJE7F727eYWAsJf_XnTGxk"
+#provide API access keys, they are removed for security reasons,
+#but can be accessed via a valid google or opencage account
+api <- "-"
 register_google(key=api)
-api_key <- "7dc7bb8840b849be96663835c54c596e"
+api_key <- "-"
 
 # Read the data from a single week long data file
 # provided by TFL here:
