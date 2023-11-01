@@ -1,157 +1,95 @@
-library(lubridate)
-library(data.table)
-library(dplyr)
+# Read data from a CSV file named "temperature.csv" and store it in the 'temp' data frame.
+temp <- read.csv("temperature.csv")
 
-rorymonths <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
-rorydays <- c("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31")
+# Replace missing values in the 'Boston' column with the mean of non-missing values.
+temp$Boston[which(is.na(temp$Boston))] = mean(temp$Boston, na.rm = TRUE)
 
-stationinfo <- read.csv("station-postcodes.csv")
+# Find the index of the row where 'datetime' is "2016-01-01 00:00:00".
+testbound <- which(temp$datetime == "2016-01-01 00:00:00")
 
-#twol <- c("W1","WC","EC")
-twol <- c("WC")
+# Create a new data frame 'boston' containing 'datetime' and 'Boston' columns.
+boston <- temp[, c("datetime", "Boston")]
 
-stationinfo <- mutate(stationinfo,Postcode = substr(Postcode,0,2))
-stationinfo.postcode <-stationinfo$Postcode
+# Create 'bostontrain' data frame containing data from the beginning to the 'testbound' index.
+bostontrain <- temp[1:testbound, c("datetime", "Boston")]
 
-stationinfon <- data.frame(X=character(), 
-                           Station=character(),
-                           Postcode=character(),
-                           Number=character(),
-                           stringsAsFactors=FALSE)
-n  <- 0
-for (i in 1:nrow(stationinfo)) {
-  if (stationinfo.postcode[i] %in% twol){
-    n <- n +1
-    stationinfon[nrow(stationinfon) + 1,] = stationinfo[i,]
-    print(i)
-  }
-  else{
-  }
-}
-stationinfon.station <-stationinfon$Station        
+# Create 'bostontest' data frame containing data from 'testbound' to the end of 'temp'.
+bostontest <- temp[testbound:nrow(temp), c("datetime", "Boston")]
 
+# Calculate the number of forecasts and the number of time lags.
+nf <- nrow(temp) - 24
+nk <- 24
 
-datetostr <- function(date_in){
+# Initialize empty matrices 'yfp' and 'ym'.
+#future prediction dataser
+yfp <- matrix(, nf - testbound + 1, nk)
+# mean predictor
+ym <- matrix(, nf - testbound + 1, nk)
+
+# Loop through the rows starting from 'testbound' to 'nf'.
+for (i in testbound:nf) {
+  # replicates the last value 24 times as the next datapoint
+  yfp[i - testbound + 1, ] <- rep(boston$Boston[i], nk)
   
-  paste(as.character(rorydays[day(date_in)]),as.character(rorymonths[month(date_in)]),as.character(year(date_in)), sep ="")
+  # replicates the last value 24 times as the next datapoint based on the mean of the previsu row
+  ym[i - testbound + 1, ] <- boston$Boston[(i + 1):(i + nk)]
 }
 
-strtodate <- function(z){
-  z <- tolower(z) 
-  as.Date(z, "%d%b%Y") # converts to date(year,month(jan,feb,mar,...),day)
+# Calculate the error by subtracting 'yfp' from 'ym'.
+error <- ym - yfp
+
+# Calculate the bias, mean absolute error (MAE), and root mean squared error (RMSE) for each time lag.
+bias <- colMeans(error)
+mae <- colMeans(abs(error))
+rmse <- (colMeans(error^2))^0.5
+
+# Create a plot of bias, MAE, and RMSE against the lead time in hours.
+plot(1:24, bias, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "black",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
+axis(1, seq(1, 24, 1))
+axis(2, seq(-1, 9, 1))
+par(new = TRUE)
+
+# Add MAE to the existing plot in green.
+plot(1:24, mae, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "green",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
+par(new = TRUE)
+
+# Add RMSE to the existing plot in red.
+plot(1:24, rmse, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "red",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
+
+
+yc <- mean(boston$Boston[1:testbound-1])
+
+nf <- length(boston$Boston)-24
+nk <- 24
+yfc <- matrix(,nf-testbound+1,nk)
+ym <- matrix(,nf-testbound+1,nk)
+for (i in testbound:nf) {
+  yfc[i-testbound+1,] <- rep(yc,nk)
+  ym[i-testbound+1,] <- boston$Boston[(i+1):(i+nk)]
 }
+# Calculate the error by subtracting 'yfp' from 'ym'.
+error <- ym - yfp
 
-urlgen <- function(strin,num){
-  ns <- strtodate(strin) + days(7)
-  ne <- strtodate(strin) + days(13)
-  
-  nstart <- datetostr(ns)
-  nend <- datetostr(ne)
-  range <- paste(nstart,nend,sep = "-")
-  paste("https://cycling.data.tfl.gov.uk/usage-stats/",num,"JourneyDataExtract",range,".csv", sep = "")
-}
+# Calculate the bias, mean absolute error (MAE), and root mean squared error (RMSE) for each time lag.
+bias <- colMeans(error)
+mae <- colMeans(abs(error))
+rmse <- (colMeans(error^2))^0.5
 
-dateextract <- function(link){
-  substr(link,nchar(link)-22,nchar(link)-14)
-}
-numextract <- function(link){
-  as.integer(substr(link,nchar(link)-43,nchar(link)-41))
-}
+# Create a plot of bias, MAE, and RMSE against the lead time in hours.
+plot(1:24, bias, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "black",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
+axis(1, seq(1, 24, 1))
+axis(2, seq(-1, 9, 1))
+par(new = TRUE)
 
+# Add MAE to the existing plot in green.
+plot(1:24, mae, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "green",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
+par(new = TRUE)
 
-newdataformatextraction <- function(startinglink){
-  startnum <- numextract(startinglink) +1
-  labels <- list()
-  newlink <- startinglink
-
-  for (i in startnum:375) {
-    labels <- append(labels, newlink, after = length(labels))
-    curlink <- newlink
-    newlink <- urlgen(dateextract(curlink),i)
-  }
-
-
-  dataframe <- data.frame(#Number=character(), 
-                          Start.date=character(),
-                          #Start.station.number=character(),
-                          Start.station=character(),
-                          End.date=character(),
-                          #End.station.number=character(),
-                          End.station=character(),
-                          #Bike.number=character(),
-                          #Total.duration..ms.=character(),
-                          stringsAsFactors=FALSE)
-  #startnum - 375
-  for (i in 1:((375-startnum)+1)) {
-    nframe <- read.csv(labels[[i]])
-    #nframe = subset(nframe, select = -c(Bike.model,Total.duration,Total.duration..ms.,Bike.number,End.station.number,Start.station.number))
-
-    nframe <- nframe %>%  filter((Start.station %in% c(stationinfon.station))== TRUE | (End.station %in% c(stationinfon.station))== TRUE)
-    
-    nframe = subset(nframe, select = -c(Bike.model,Total.duration,Total.duration..ms.,Bike.number,End.station.number,Start.station.number,Number))
-    dataframe = rbind(dataframe,nframe)
-    print(i)
-  }
-  return(dataframe)
-}
-
-newdata <- newdataformatextraction("https://cycling.data.tfl.gov.uk/usage-stats/335JourneyDataExtract12Sep2022-18Sep2022.csv")
-
-testdata <- newdata
-
-olddataformatextraction <- function(startinglink){
-  startnum <- numextract(startinglink) +1
-  csvlist <- list()
-  holdlink <- startinglink
-   
-  
-  lock <- 246
-  
-  for (n in startnum:335) {
-    csvlist <- append(csvlist, holdlink, after = length(csvlist))
-    templink <- holdlink
-    if (n > lock){
-      n <- n -1
-    }
-      
-    holdlink <- urlgen(dateextract(templink),n)
-  }
-  
-  olddata <- data.frame(Number=character(), 
-                         Start.date=character(),
-                         #Start.station.number=character(),
-                         Start.station=character(),
-                         End.date=character(),
-                         #End.station.number=character(),
-                         End.station=character(),
-                         #Bike.number=character(),
-                         #Total.duration..ms.=character(),
-                         stringsAsFactors=FALSE)
-  
-  titles <- c("Number","Start.date","Start.station.number","Start.station","End.date","End.station.number","End.station","Bike.number","Total.duration..ms.")
-
-  for (x in 1:((335-startnum)+1)) {
-    frame <- read.csv(csvlist[[x]])
-    if (x != 206){
-      nframe <- frame[, c(1,7,8,9,4,5,6,3,2)] # a way to subset and rorder rows
-      colnames(nframe) <- titles
-      nframe <- nframe %>%  filter((Start.station %in% c(stationinfon.station))== TRUE | (End.station %in% c(stationinfon.station))== TRUE)
-      
-
-      nframe <- subset(nframe, select = -c(Total.duration..ms.,Bike.number,End.station.number,Start.station.number,Number))
-      
-      olddata <- rbind(olddata,nframe)
-    }
-    print(x)
-  }
-
-  return(olddata)
-}
-
-olddata <- olddataformatextraction("https://cycling.data.tfl.gov.uk/usage-stats/121JourneyDataExtract01Aug2018-07Aug2018.csv")
-
-
-Finalset <- rbind(olddata,newdata)
-
-# 112 listing on the web has june not jun for some reason.
-write.csv(Finalset, file = "C:/Imperial/WC_data.csv")
+# Add RMSE to the existing plot in red.
+plot(1:24, rmse, type = "l", xlim = c(1, 24), ylim = c(-1, 9), col = "red",
+     xlab = "lead time [h]", ylab = "error [deg]", axes = FALSE)
