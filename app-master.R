@@ -1,41 +1,79 @@
 library(shiny)
 library(leaflet)
+library(shinydashboard)
+library(fresh)
 
-ui <- fluidPage(
-  leafletOutput("mymap"),
+# Define the import statement for Hammersmith One bold
+font_import_statement <- "https://fonts.googleapis.com/css?family=Hammersmith+One"
+
+# Create a custom theme
+my_theme <- create_theme(
+  adminlte_color(light_blue = "black"),
+  adminlte_global(content_bg = "white"),
+  adminlte_sidebar(width = "400px"),
+  custom_css = sprintf(
+    ".main-header .logo { font-family: 'Hammersmith One', sans-serif; font-weight: 400; font-size: 24px; }",
+    font_import_statement
+  )
+)
+
+# Create a custom style for the title element
+title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
+
+#header styling
+dbHeader <- dashboardHeader(
   
-  # create a text output to troubleshoot app functionality
-  verbatimTextOutput("clickMessage")
+  #define the title 
+  title = span("Bike Hire Activity", style = title_style)
+  
+  #include the logo
+  #title = tags$img(src = "logo.png")
+)
+
+# Define the UI
+ui <- dashboardPage(
+  
+  dbHeader,
+  
+  #Sidebar styling
+  dashboardSidebar(
+    #imageOutput("image"),
+    textOutput("clickMessage")
+  ),
+  
+  #Main body styling
+  dashboardBody(
+    use_theme(my_theme),
+    leafletOutput("mymap", height = "100vh")
+  )
 )
 
 server <- function(input, output, session) {
   
+  #render the logo
+  output$image <- renderImage({
+    list(src = "logo.png", contentType = "image/png", width = "200px")
+  })
+  
   # Initialize click message for troubleshooting
   click_message <- reactiveVal("")
   
-  #define the map output using the renderLeaflet function
+  # Define the map output using the renderLeaflet() function
   output$mymap <- renderLeaflet({
-    
-    #create the map using leaflet() and use %>% to specify the details of the app
+    # Create the map using leaflet() and specify the map details
     leaflet() %>%
-      
-      #define the starting location and zoom, the map should zoom on central london
       setView(lng = -0.130, lat = 51.5194, zoom = 12) %>%
       addProviderTiles(providers$Stadia.StamenTonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
-      
-      #add circles to troubleshoot action button functionality
-      #define layerIDs so they can be listed to by observeEvents
       addCircleMarkers(lng = -0.130, lat = 51.5194, radius = 50, layerId = "circle1") %>%
       addCircleMarkers(lng = -0.140, lat = 51.5294, radius = 50, layerId = "circle2")
   })
   
-  #listen for when the map is clicked
+  # Listen for when the map is clicked
   observeEvent(input$mymap_marker_click, {
-    
-    #find what element has been clicked by using its ID
+    # Find what element has been clicked by using its ID
     clicked_marker <- input$mymap_marker_click$id
     
-    #logic to determine output action depending on what element is clicked
+    # Logic to determine output action depending on what element is clicked
     if (clicked_marker == "circle1") {
       click_message("Circle 1 is clicked")
     } else if (clicked_marker == "circle2") {
@@ -43,13 +81,11 @@ server <- function(input, output, session) {
     }
   })
   
-  #render the troubleshooting message in the message output
+  # Render the troubleshooting message in the message output
   output$clickMessage <- renderText({
     click_message()
   })
 }
 
-#launch the app
+# Launch the app
 shinyApp(ui, server)
-
-
