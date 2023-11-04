@@ -24,7 +24,7 @@ title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
 dbHeader <- dashboardHeader(
   
   #define the title 
-  title = span("Bike Hire Activity", style = title_style)
+  title = span("Bike Hire Demand Forecast", style = title_style)
   
   #include the logo
   #title = tags$img(src = "logo.png")
@@ -37,14 +37,19 @@ ui <- dashboardPage(
   
   #Sidebar styling
   dashboardSidebar(
-    #imageOutput("image"),
     textOutput("clickMessage")
   ),
   
   #Main body styling
   dashboardBody(
     use_theme(my_theme),
-    leafletOutput("mymap", height = "100vh")
+    div(
+      style = "position: relative;",
+      leafletOutput("mymap", height = "100vh"),
+    div(
+        imageOutput("image"),
+        style = "position: absolute; top: 10px; left: 50px;")
+    )
   )
 )
 
@@ -52,7 +57,7 @@ server <- function(input, output, session) {
   
   #render the logo
   output$image <- renderImage({
-    list(src = "logo.png", contentType = "image/png", width = "200px")
+    list(src = "logo.png", contentType = "image/png", width = "250px")
   })
   
   # Initialize click message for troubleshooting
