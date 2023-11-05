@@ -40,6 +40,9 @@ ui <- dashboardPage(
   #Sidebar formatting and outputs
   dashboardSidebar(
     
+    #spacing
+    div(style = "height: 15px;"),
+    
     #render the title for the selected postcode
     uiOutput("PostcodeTitle")
   ),
@@ -73,7 +76,7 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
   
-  # Initialize a reactiveValues object
+  # Initialize a reactiveValues object to store the selected postcode
   rv <- reactiveValues(postcode = "wc1")
   
   #render the logo in the overlay imageOutput() element
@@ -252,7 +255,8 @@ server <- function(input, output, session) {
   
   # Render the postcode title that output is in the sidebar
   output$PostcodeTitle <- renderUI({
-    HTML(paste0("<div style='text-align: center; font-size: 24px;'>", postcode_title(), "</div>"))
+    HTML(paste0("<div style='text-align: center; font-size: 24px;
+                font-weight: bold;'>", postcode_title(), "</div>"))
   })
 }
 
