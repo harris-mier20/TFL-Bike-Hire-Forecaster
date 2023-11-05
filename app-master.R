@@ -56,7 +56,7 @@ ui <- dashboardPage(
     #overlay the logo  
     div(
         imageOutput("image"),
-        style = "position: absolute; top: 20px; left: 60px;")
+        style = "position: absolute; top: 20px; left: 60px; pointer-events: none;")
     )
   )
 )
@@ -78,11 +78,13 @@ server <- function(input, output, session) {
     leaflet() %>%
       
       #define where the map is zoomed by default
-      setView(lng = -0.110, lat = 51.5200, zoom = 14) %>%
+      setView(lng = -0.110, lat = 51.5200, zoom = 12) %>%
       addProviderTiles(providers$Stadia.StamenTonerLite, options = providerTileOptions(noWrap = TRUE)) %>%
       
       #add postcode regions to the map
-      addPolygons(data = wc1_sf, fillColor = "red", fillOpacity = 0.5, layerId = "wc1", options = pathOptions(clickable = TRUE)) %>%
+      addPolygons(data = wc1_sf, fillColor = "red", fillOpacity = 0.5,
+                  layerId = "wc1", options = pathOptions(clickable = TRUE),
+                  highlightOptions = highlightOptions(weight = 5, color = "blue")) %>%
       addPolygons(data = wc2_sf, fillColor = "red", fillOpacity = 0.5, layerId = "wc2", options = pathOptions(clickable = TRUE)) %>%
       addPolygons(data = ec1_sf, fillColor = "red", fillOpacity = 0.5, layerId = "ec1", options = pathOptions(clickable = TRUE)) %>%
       addPolygons(data = ec2_sf, fillColor = "red", fillOpacity = 0.5, layerId = "ec2", options = pathOptions(clickable = TRUE)) %>%
@@ -94,6 +96,7 @@ server <- function(input, output, session) {
   #wait for a shape to be clicked
   observeEvent(input$mymap_shape_click, {
     postcode <- input$mymap_shape_click$id
+    print(postcode)
     
     #logic to handle actions based on what postcode is clicked
     if (postcode == "wc1") {

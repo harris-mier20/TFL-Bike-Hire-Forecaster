@@ -1,17 +1,15 @@
 library(sf)
 
 #coordinates for vertices for WC1
-wc1_matrix <- matrix(c(
+wc1_matrix_simplified <- matrix(c(
   -0.1298618, 51.5159003,
   -0.1382732, 51.5253532,
   -0.1223087, 51.5305862,
   -0.1115799, 51.5316007,
-  -0.1092625, 51.5276494,
   -0.1132107, 51.5215616,
-  -0.1116657, 51.5183037,
-  -0.1298189, 51.515927,
-  -0.1298618, 51.5159003 
+  -0.1298618, 51.5159003
 ), ncol = 2, byrow = TRUE)
+
 
 # Create the sf polygon for wc1 and convert to simple features for display on map
 wc1_sf <- st_polygon(list(wc1_matrix))
