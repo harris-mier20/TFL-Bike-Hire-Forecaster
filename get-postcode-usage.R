@@ -2,10 +2,11 @@ library(lubridate)
 library(data.table)
 library(dplyr)
 library(ggplot2)
-setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
+
+#set the wd 
+#setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
 
 dailyactivity <- read.csv("tfl-bike-daily-activity-central-london.csv")
-
 
 #Getting a list of all stations within London along with their postcodes
 stationinfo <- read.csv("station-postcodes-central.csv")
@@ -13,15 +14,15 @@ stationinfo <- read.csv("station-postcodes-central.csv")
 #defining which postcodes are to be included in the output dataset c("W1","WC","EC")(all central london postcode first two letters)
 twol <- c("EC1","EC2","EC3","EC4","WC1","WC2")
 
-### inputs a list of stations with their postcodes and a list of the postcode
+# inputs a list of stations with their postcodes and a list of the postcode
 #areas you would like to include outputs a data frame of the stations within those
-# postcodes along with a shortened form of their postcode###
+# postcodes along with a shortened form of their postcode
 stationexrtraction.postcode <- function(stationset,postcodes){
   # reformatting postcodes to only include first three digits
   stationset <- mutate(stationset,Postcode = substr(Postcode,0,nchar(postcodes[1])))
   stationset.postcode <-stationset$Postcode
   
-  # creting a blank dataset to be filled with only the stations within the predifned postcode list
+  # creating a blank dataset to be filled with only the stations within the predifned postcode list
   stationset.filtered <- data.frame(X=character(), 
                              Station=character(),
                              Postcode=character(),

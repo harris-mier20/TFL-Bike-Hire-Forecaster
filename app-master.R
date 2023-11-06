@@ -81,7 +81,7 @@ server <- function(input, output, session) {
   
   #render the logo in the overlay imageOutput() element
   output$image <- renderImage({
-    list(src = "logo.png", contentType = "image/png", width = "350px", deleteFile=FALSE)
+    list(src = "assets/logo.png", contentType = "image/png", width = "350px", deleteFile=FALSE)
   })
   
   # Initialize click message for troubleshooting
