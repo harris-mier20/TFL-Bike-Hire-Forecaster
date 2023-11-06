@@ -1,7 +1,7 @@
 library(lubridate)
 library(data.table)
 library(dplyr)
-
+library(ggplot2)
 setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
 
 dailyactivity <- read.csv("tfl-bike-daily-activity-central-london.csv")
@@ -59,12 +59,31 @@ stationinfon <- stationexrtraction.list(stationinfo,twol)
 #a postcode area###
 
 listofdataframes <- list()
-
+ls <- list()
 i = 1
 for( i in 1:length(stationinfon)){
-  listofdataframes[[i]] <- dailyactivity[stationinfon[[i]]]
+  ls <- append(stationinfon[[i]], "Date", after = 0)
+  listofdataframes[[i]] <- dailyactivity[ls]
 }
 
+i = 1
+postcode.activity<- data.frame(matrix(NA, nrow = 1321, ncol = 0))
+dailyactivity.date <- data.frame()
 for( i in 1:length(stationinfon)){
-  rowSums(lis)
+  df <- listofdataframes[[i]]
+  dailyactivity.date <- as.Date(df$Date,format = "%d/%m/%Y")
+  postcode.activity["Date"] <- dailyactivity.date
+  df <- df[-c(1)]
+  listofdataframes[[i]]
+  df <- rowSums(df)
+  postcode.activity[twol[i]] <- df
 }
+
+postcode.activity.means <-colMeans(postcode.activity[-c(1,8)]) 
+
+postcode.activity.standarddeviation <- sapply(postcode.activity[-c(1,8)], sd)
+
+postcode.activity["weekday"] <- weekdays(postcode.activity$Date)
+ggplot(postcode.activity) +geom_point(aes(Date, WC1,color=ifelse(weekday %in% c("Friday","Saturday","Sunday"), 'red', 'black')))+ theme(legend.position="none")
+
+
