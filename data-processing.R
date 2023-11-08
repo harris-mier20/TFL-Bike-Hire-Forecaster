@@ -16,3 +16,78 @@ postcode_statistics <- data.frame("Postcode" = postcode_labels,
                                   "Stations" = n_stations,
                                   "Mean" = activity_means,
                                   "SD"=activity_sd)
+
+#define function to smooth the data with exponential smoothing
+smooth_data <- function(data,alpha,starting_value){
+  
+  #define parameters
+  aa <- alpha
+  l0 <- starting_value
+  
+  #initiate vector to store smoothed data
+  smoothed_data <- numeric(length(data))
+  
+  #loop through the data and perform exponential smoothing
+  for (i in 1:length(smoothed_data)) {
+    smoothed_data[i] <- aa * data[i] + (1 - aa) * l0
+    l0 <- smoothed_data[i]
+  }
+  return(smoothed_data)
+}
+
+#create a data frame with the data for WC1
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_wc1 <- data$WC1
+smooth_wc1 <- smooth_data(raw_wc1, 0.1, 2000)
+wc1_data <- data.frame("Date" = dates,
+                       "Raw" = raw_wc1,
+                       "Smooth" = smooth_wc1)
+
+#create a data frame with the data for WC2
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_wc2 <- data$WC2
+smooth_wc2 <- smooth_data(raw_wc2, 0.1, 2000)
+wc2_data <- data.frame("Date" = dates,
+                       "Raw" = raw_wc2,
+                       "Smooth" = smooth_wc2)
+
+#create a data frame with the data for EC1
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_ec1 <- data$EC1
+smooth_ec1 <- smooth_data(raw_ec1, 0.1, 2000)
+ec1_data <- data.frame("Date" = dates,
+                       "Raw" = raw_ec1,
+                       "Smooth" = smooth_ec1)
+
+#create a data frame with the data for EC2
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_ec2 <- data$EC2
+smooth_ec2 <- smooth_data(raw_ec2, 0.1, 2000)
+ec2_data <- data.frame("Date" = dates,
+                       "Raw" = raw_ec2,
+                       "Smooth" = smooth_ec2)
+
+#create a data frame with the data for EC3
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_ec3 <- data$EC3
+smooth_ec3 <- smooth_data(raw_ec3, 0.1, 2000)
+ec3_data <- data.frame("Date" = dates,
+                       "Raw" = raw_ec3,
+                       "Smooth" = smooth_ec3)
+
+#create a data frame with the data for EC4
+#one column for the data, one column for the smoothed data
+dates <- data$Date
+raw_ec4 <- data$EC4
+smooth_ec4 <- smooth_data(raw_ec4, 0.1, 2000)
+ec4_data <- data.frame("Date" = dates,
+                       "Raw" = raw_ec4,
+                       "Smooth" = smooth_ec4)
+
+
+

@@ -72,7 +72,12 @@ ui <- dashboardPage(
       column(width=1),
       column(width=7, "Standard Deviation", style = text_style),
       column(width=3, uiOutput("sd"), style = text_style)
-    )
+    ),
+    
+    #make a plot of the overall data for each postcode
+    #overlay the smoothed data
+    div(style = "height: 15px;"),
+    plotOutput("SmoothedPlot")
     
   ),
   
@@ -301,6 +306,23 @@ server <- function(input, output, session) {
     output$number <- renderText(number)
     output$mean <- renderText(mean)
     output$sd <- renderText(sd)
+    
+    #find the correct data frame that is made in data-processing.R
+    postcode_data <- paste0(rv$postcode,"_data")
+    df <- get(postcode_data)
+    
+    #plot the data and smoothed data for the selected postcode
+    output$SmoothedPlot <- renderPlot({
+      plot(df$Smooth, type = "l", main = "Smoothed Data for Selected Postcode",
+           col = "black",
+           bg = "transparent",
+           xlab = "X-Axis Label",
+           ylab = "Y-Axis Label",
+           ylim = c(min(df$Smooth), max(df$Smooth)),
+           xlim = c(1, length(df$Smooth)),
+           width = 6,                 
+           height = 4)
+    })
   })
   
 }
