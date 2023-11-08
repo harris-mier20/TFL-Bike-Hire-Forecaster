@@ -7,6 +7,9 @@ library(sf)
 #load in the file that defines all the postcode region borders
 source("create-map-regions.R")
 
+#load in the file that contains the data frame to be displayed
+source("data-processing.R")
+
 # Define the import statement for Hammersmith One font
 font_import_statement <- "https://fonts.googleapis.com/css?family=Hammersmith+One"
 
@@ -21,8 +24,9 @@ my_theme <- create_theme(
   )
 )
 
-# Create a custom style for the title element specifically
+# Create custom styles for specific text elemets
 title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
+text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
 
 #header styling
 dbHeader <- dashboardHeader(
@@ -44,7 +48,32 @@ ui <- dashboardPage(
     div(style = "height: 15px;"),
     
     #render the title for the selected postcode
-    uiOutput("PostcodeTitle")
+    uiOutput("PostcodeTitle"),
+    
+    #number of stations
+    div(style = "height: 15px;"),
+    fluidRow(
+      column(width=1),
+      column(width=7, "Number of Stations", style = text_style),
+      column(width=3, uiOutput("number"), style = text_style)
+    ),
+    
+    #mean daily activity
+    div(style = "height: 7px;"),
+    fluidRow(
+      column(width=1),
+      column(width=7, "Mean Daily Activity", style = text_style),
+      column(width=3, uiOutput("mean"), style = text_style)
+    ),
+    
+    #Daily Standard Deviation
+    div(style = "height: 7px;"),
+    fluidRow(
+      column(width=1),
+      column(width=7, "Standard Deviation", style = text_style),
+      column(width=3, uiOutput("sd"), style = text_style)
+    )
+    
   ),
   
   #Main body styling
@@ -258,6 +287,22 @@ server <- function(input, output, session) {
     HTML(paste0("<div style='text-align: center; font-size: 24px;
                 font-weight: bold;'>", postcode_title(), "</div>"))
   })
+  
+  #observe for changes and fill in the descriptive statistics using
+  #the data from a data frame created in data-processing.R
+  observe({
+    
+    #search for the values from the data based on the input
+    number <- postcode_statistics$Stations[postcode_statistics$Postcode == rv$postcode]
+    mean <- postcode_statistics$Mean[postcode_statistics$Postcode == rv$postcode]
+    sd <- postcode_statistics$SD[postcode_statistics$Postcode == rv$postcode]
+    
+    #renderText() the values to the UI elements above
+    output$number <- renderText(number)
+    output$mean <- renderText(mean)
+    output$sd <- renderText(sd)
+  })
+  
 }
 
 # Launch the app

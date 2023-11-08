@@ -27,5 +27,12 @@ This code is located in the data-pre-processing folder. It contains 3 R files. O
 
 Another file, data-extraction.R, scrapes and merges all data, found [here](https://cycling.data.tfl.gov.uk/), for every Santander bike journey made since 2018, some processing is done to ensure consistent formatting.
 
-Another file, data-restructure.R, takes the output csv of this data and completes various functions to pre process the data, counting every journey started and ended for each central london station and arranges and exports a new csv that presents this data day by day. Missing data has been filled in with mean imputation. The final data can be found in the root directory of this repo with the name 'tfl-bike-daily-activity-central-london.csv'
+Another file, data-restructure.R, takes the output csv of this data and completes various functions to pre process the data, counting every journey started and ended for each central london station and arranges and exports a new csv that presents this data day by day. Missing data has been filled in with mean imputation. The data can be found in the root directory of this repo with the name 'tfl-bike-daily-activity-central-london.csv'
+
+Lastly, we run another script, get-postcode-usage.R, to count the activity across multiple stations within each central London postcode, WC1, WC2, EC1, EC2, EC3, EC4. We export this data as daily-activity-by-postcode.csv and We use this data for processing with the app.
+
+### Server Side Data Processing.
+We have a script data-processing which processes the data from daily-activity-by-postcode.csv and generates multiple data frames to be referenced by the app server, before the app-master.R renders the outputs on the UI.
+
+### App UI
 
