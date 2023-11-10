@@ -1,21 +1,49 @@
 # Read the data from the CSV files and extract the station names
 data <- read.csv("daily-activity-by-postcode.csv")
 
-#collect data on all stations
+#collect data on all stations including a calculation of the activity per station
+#for each postcode
 postcode_labels <- c("ec1","ec2","ec3","ec4","wc1","wc2")
 activity_means <-colMeans(data[3:8])
-activity_sd <- sapply(data[3:8], sd)
+
+#hard code the number of stations in each postcode and calculate the
+#ratio of activity to number of stations in each postcode
 n_stations <- c(29,23,9,14,29,23)
+activity_aps <- unlist(Map("/", activity_means, n_stations))
 
 #round the data
 activity_means <- round(activity_means, digits = 0)
-activity_sd <- round(activity_sd, digits = 0)
+activity_aps <- round(activity_aps, digits = 1)
 
 #create data frame with statistics on each station
 postcode_statistics <- data.frame("Postcode" = postcode_labels,
                                   "Stations" = n_stations,
                                   "Mean" = activity_means,
-                                  "SD"=activity_sd)
+                                  "Ratio"= activity_aps)
+
+#create empty list to fill with emojis and colours to describe data
+emojis <- list()
+colours <- list()
+
+#add emoji and colour information to describe the data - for rendering on the UI
+for (i in 1: length(postcode_statistics$Ratio)){
+  if (postcode_statistics$Ratio[i] >= 90){
+    emojis[i] <- "angry"
+    colours[i] <- "red"
+  } else if (postcode_statistics$Ratio[i] >= 80){
+    emojis[i] <- "disappointed"
+    colours[i] <- "orange"
+  } else {
+    emojis[i] <- "smile"
+    colours[i] <- "green"
+  }
+}
+
+#append the new info to the data frame
+postcode_statistics$Emoji <- emojis
+postcode_statistics$Colour <- colours
+
+
 
 #define function to smooth the data with exponential smoothing
 smooth_data <- function(data,alpha,starting_value){

@@ -3,6 +3,7 @@ library(leaflet)
 library(shinydashboard)
 library(fresh)
 library(sf)
+library(emojifont)
 
 #load in the file that defines all the postcode region borders
 source("create-map-regions.R")
@@ -33,7 +34,7 @@ text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
 dbHeader <- dashboardHeader(
   
   #define the title 
-  title = span("Bike Hire Demand Forecast", style = title_style)
+  title = span("TFL Bike Activity", style = title_style)
 )
 
 # Define the UI
@@ -71,8 +72,8 @@ ui <- dashboardPage(
     div(style = "height: 7px;"),
     fluidRow(
       column(width=1),
-      column(width=7, "Standard Deviation", style = text_style),
-      column(width=3, uiOutput("sd"), style = text_style)
+      column(width=7, "Activity per Station", style = text_style),
+      column(width=3, uiOutput("ratio"), style = text_style)
     ),
     
     #Title for first plot
@@ -312,12 +313,18 @@ server <- function(input, output, session) {
     #search for the values from the data based on the input
     number <- postcode_statistics$Stations[postcode_statistics$Postcode == rv$postcode]
     mean <- postcode_statistics$Mean[postcode_statistics$Postcode == rv$postcode]
-    sd <- postcode_statistics$SD[postcode_statistics$Postcode == rv$postcode]
+    ratio <- postcode_statistics$Ratio[postcode_statistics$Postcode == rv$postcode]
+    emoji <- postcode_statistics$Emoji[postcode_statistics$Postcode == rv$postcode]
+    colour <- postcode_statistics$Colour[postcode_statistics$Postcode == rv$postcode]
+    
+    ratio_str <- paste0(format(ratio, digits = 2), "  ", emoji(emoji))
     
     #renderText() the values to the UI elements above
     output$number <- renderText(number)
     output$mean <- renderText(mean)
-    output$sd <- renderText(sd)
+    output$ratio <- renderText({
+      HTML(paste0("<span style='font-weight: 600; color:", colour, "'>", ratio_str, "</span>"))
+    })
     
     #find the correct data frame that is made in data-processing.R
     postcode_data <- paste0(rv$postcode,"_data")
@@ -325,16 +332,22 @@ server <- function(input, output, session) {
     
     #plot the data and smoothed data for the selected postcode
     output$SmoothedPlot <- renderPlot({
-      par(mar=c(15,5,1.5,1))
+      par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
-      plot(df$Smooth, type = "l",
-           col = "black", xlab = "Date", ylab = "Activity",
+      #plot the raw data in a light plot
+      plot(df$Raw, type = "l", col = "#828282", xlab = "", ylab = "Activity",
            ylim = c(0, 4000),
            xlim = c(1, length(df$Smooth)), xaxt = "n")
       
+      #overlay and highlight the smoothed data
+      lines(df$Smooth, col = "red")
+      
       #manually define the axis labels for the avaiable data
       values_to_show <- seq(1, length(df$Smooth), length.out = 4)
-      axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"))
+      axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"), col.axis = "white")  # Set white axis color
+      axis(2, col.axis = "white")
+      mtext(text = "Activity", side = 2, line = 3, col = "white", cex = 1.35)
+      
     })
   })
   
