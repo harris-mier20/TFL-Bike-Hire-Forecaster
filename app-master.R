@@ -26,6 +26,7 @@ my_theme <- create_theme(
 
 # Create custom styles for specific text elemets
 title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
+header_style <- "font-family: 'Hammersmith One', sans-serif; font-size:130%; text-align: center; font-weight: 600;"
 text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
 
 #header styling
@@ -74,10 +75,21 @@ ui <- dashboardPage(
       column(width=3, uiOutput("sd"), style = text_style)
     ),
     
+    #Title for first plot
+    div(style = "height: 25px;"),
+    div("Recorded Daily Activity", style = header_style),
+    
     #make a plot of the overall data for each postcode
     #overlay the smoothed data
-    div(style = "height: 15px;"),
-    plotOutput("SmoothedPlot")
+    div(style = "height: 7px;"),
+    fluidRow(
+      column(width = 1),
+      column(
+        width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
+                        plotOutput("SmoothedPlot"))
+      ),
+      column(width = 1)
+    )
     
   ),
   
@@ -313,15 +325,16 @@ server <- function(input, output, session) {
     
     #plot the data and smoothed data for the selected postcode
     output$SmoothedPlot <- renderPlot({
-      plot(df$Smooth, type = "l", main = "Smoothed Data for Selected Postcode",
-           col = "black",
-           bg = "transparent",
-           xlab = "X-Axis Label",
-           ylab = "Y-Axis Label",
-           ylim = c(min(df$Smooth), max(df$Smooth)),
-           xlim = c(1, length(df$Smooth)),
-           width = 6,                 
-           height = 4)
+      par(mar=c(15,5,1.5,1))
+      
+      plot(df$Smooth, type = "l",
+           col = "black", xlab = "Date", ylab = "Activity",
+           ylim = c(0, 4000),
+           xlim = c(1, length(df$Smooth)), xaxt = "n")
+      
+      #manually define the axis labels for the avaiable data
+      values_to_show <- seq(1, length(df$Smooth), length.out = 4)
+      axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"))
     })
   })
   
