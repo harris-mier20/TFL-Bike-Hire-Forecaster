@@ -18,17 +18,18 @@ font_import_statement <- "https://fonts.googleapis.com/css?family=Hammersmith+On
 my_theme <- create_theme(
   adminlte_color(light_blue = "black"),
   adminlte_global(content_bg = "white"),
-  adminlte_sidebar(width = "35%"),
+  adminlte_sidebar(width = "45%"),
   custom_css = sprintf(
     ".main-header .logo { font-family: 'Hammersmith One', sans-serif; font-weight: 400; font-size: 24px; }",
     font_import_statement
   )
 )
 
-# Create custom styles for specific text elemets
+# Create custom styles for specific text elements
 title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
 header_style <- "font-family: 'Hammersmith One', sans-serif; font-size:130%; text-align: center; font-weight: 600;"
 text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
+text_body <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; padding-left:5%; padding-right:5%"
 
 #header styling
 dbHeader <- dashboardHeader(
@@ -46,10 +47,15 @@ ui <- dashboardPage(
   #Sidebar formatting and outputs
   dashboardSidebar(
     
-    #spacing
-    div(style = "height: 15px;"),
+    #explanation text
+    div(style = "height: 10px;"),
+    div("The 'Daily Activity' of a postcode is defined as the total number of journeys that started or ended at a bike station
+        within the postcode in a single day. Similarly the 'Activity per Station' is this total daily activity divided by the
+        number of stations that currently exist within that postcode", style = text_body),
     
     #render the title for the selected postcode
+    div(style = "height: 15px;border-bottom: 2px solid white;"),
+    div(style = "height: 15px;"),
     uiOutput("PostcodeTitle"),
     
     #number of stations
@@ -88,6 +94,22 @@ ui <- dashboardPage(
       column(
         width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
                         plotOutput("SmoothedPlot"))
+      ),
+      column(width = 1)
+    ),
+    
+    #Title for second plot
+    div(style = "height: 30px;"),
+    div("Forecast of Future Demand", style = header_style),
+    
+    #make a plot to present the forecast data, displaying the confidence intervals
+    #overlay the smoothed data
+    div(style = "height: 7px;"),
+    fluidRow(
+      column(width = 1),
+      column(
+        width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
+                        plotOutput("ForecastPlot"))
       ),
       column(width = 1)
     )
@@ -302,7 +324,7 @@ server <- function(input, output, session) {
   
   # Render the postcode title that output is in the sidebar
   output$PostcodeTitle <- renderUI({
-    HTML(paste0("<div style='text-align: center; font-size: 24px;
+    HTML(paste0("<div style='text-align: center; font-size: 30px;
                 font-weight: bold;'>", postcode_title(), "</div>"))
   })
   
@@ -335,18 +357,35 @@ server <- function(input, output, session) {
       par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
       #plot the raw data in a light plot
-      plot(df$Raw, type = "l", col = "#828282", xlab = "", ylab = "Activity",
+      plot(df$Raw, type = "l", col = "#828282", xlab = "", ylab = "",
            ylim = c(0, 4000),
            xlim = c(1, length(df$Smooth)), xaxt = "n")
       
       #overlay and highlight the smoothed data
       lines(df$Smooth, col = "red")
       
-      #manually define the axis labels for the avaiable data
+      #manually define the axis labels for the available data
       values_to_show <- seq(1, length(df$Smooth), length.out = 4)
       axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"), col.axis = "white")  # Set white axis color
       axis(2, col.axis = "white")
-      mtext(text = "Activity", side = 2, line = 3, col = "white", cex = 1.35)
+      mtext(text = "Daily Activity", side = 2, line = 3, col = "white", cex = 1.35)
+      
+    })
+    
+    #plot the forecast of the data and the confidence interval
+    output$ForecastPlot <- renderPlot({
+      par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
+      
+      #plot the raw data in a light plot
+      plot(df$Raw, type = "l", col = "#828282", xlab = "", ylab = "",
+           ylim = c(0, 4000),
+           xlim = c(1, length(df$Smooth)), xaxt = "n")
+      
+      #manually define the axis labels for the available data
+      values_to_show <- seq(1, length(df$Smooth), length.out = 4)
+      axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"), col.axis = "white")  # Set white axis color
+      axis(2, col.axis = "white")
+      mtext(text = "Forecast Activity", side = 2, line = 3, col = "white", cex = 1.35)
       
     })
   })
