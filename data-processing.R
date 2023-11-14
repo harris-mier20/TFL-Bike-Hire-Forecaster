@@ -43,8 +43,6 @@ for (i in 1: length(postcode_statistics$Ratio)){
 postcode_statistics$Emoji <- emojis
 postcode_statistics$Colour <- colours
 
-
-
 #define function to smooth the data with exponential smoothing
 smooth_data <- function(data,alpha,starting_value){
   
@@ -116,6 +114,13 @@ smooth_ec4 <- smooth_data(raw_ec4, 0.1, 2000)
 ec4_data <- data.frame("Date" = dates,
                        "Raw" = raw_ec4,
                        "Smooth" = smooth_ec4)
+
+#for each postcode create a data frame that for every day starting from 2020-06, the columns are:
+#activity for that day, activity 1 day before, activity 7 days before, mean activity for that week,
+#mean activity for that month, activity one year earlier, temperature on that day, rain fall on that day
+
+#weather data is collected from weather-data.csv
+
 
 
 

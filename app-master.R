@@ -46,74 +46,75 @@ ui <- dashboardPage(
   
   #Sidebar formatting and outputs
   dashboardSidebar(
-    
-    #explanation text
-    div(style = "height: 10px;"),
-    div("The 'Daily Activity' of a postcode is defined as the total number of journeys that started or ended at a bike station
+    div(style = "max-height: 100vh; overflow-y: auto;",
+        
+      #explanation text
+      div(style = "height: 10px;"),
+      div("The 'Daily Activity' of a postcode is defined as the total number of journeys that started or ended at a bike station
         within the postcode in a single day. Similarly the 'Activity per Station' is this total daily activity divided by the
         number of stations that currently exist within that postcode", style = text_body),
-    
-    #render the title for the selected postcode
-    div(style = "height: 15px;border-bottom: 2px solid white;"),
-    div(style = "height: 15px;"),
-    uiOutput("PostcodeTitle"),
-    
-    #number of stations
-    div(style = "height: 15px;"),
-    fluidRow(
-      column(width=1),
-      column(width=7, "Number of Stations", style = text_style),
-      column(width=3, uiOutput("number"), style = text_style)
-    ),
-    
-    #mean daily activity
-    div(style = "height: 7px;"),
-    fluidRow(
-      column(width=1),
-      column(width=7, "Mean Daily Activity", style = text_style),
-      column(width=3, uiOutput("mean"), style = text_style)
-    ),
-    
-    #Daily Standard Deviation
-    div(style = "height: 7px;"),
-    fluidRow(
-      column(width=1),
-      column(width=7, "Activity per Station", style = text_style),
-      column(width=3, uiOutput("ratio"), style = text_style)
-    ),
-    
-    #Title for first plot
-    div(style = "height: 25px;"),
-    div("Recorded Daily Activity", style = header_style),
-    
-    #make a plot of the overall data for each postcode
-    #overlay the smoothed data
-    div(style = "height: 7px;"),
-    fluidRow(
-      column(width = 1),
-      column(
-        width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
-                        plotOutput("SmoothedPlot"))
+      
+      #render the title for the selected postcode
+      div(style = "height: 15px;border-bottom: 2px solid white;"),
+      div(style = "height: 15px;"),
+      uiOutput("PostcodeTitle"),
+      
+      #number of stations
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Number of Stations", style = text_style),
+        column(width=3, uiOutput("number"), style = text_style)
       ),
-      column(width = 1)
-    ),
-    
-    #Title for second plot
-    div(style = "height: 30px;"),
-    div("Forecast of Future Demand", style = header_style),
-    
-    #make a plot to present the forecast data, displaying the confidence intervals
-    #overlay the smoothed data
-    div(style = "height: 7px;"),
-    fluidRow(
-      column(width = 1),
-      column(
-        width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
-                        plotOutput("ForecastPlot"))
+      
+      #mean daily activity
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Mean Daily Activity", style = text_style),
+        column(width=3, uiOutput("mean"), style = text_style)
       ),
-      column(width = 1)
+      
+      #Daily Standard Deviation
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Activity per Station", style = text_style),
+        column(width=3, uiOutput("ratio"), style = text_style)
+      ),
+      
+      #Title for first plot
+      div(style = "height: 25px;"),
+      div("Recorded Daily Activity", style = header_style),
+      
+      #make a plot of the overall data for each postcode
+      #overlay the smoothed data
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width = 1),
+        column(
+          width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
+                          plotOutput("SmoothedPlot"))
+        ),
+        column(width = 1)
+      ),
+      
+      #Title for second plot
+      div(style = "height: 30px;"),
+      div("Forecast of Future Demand", style = header_style),
+      
+      #make a plot to present the forecast data, displaying the confidence intervals
+      #overlay the smoothed data
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width = 1),
+        column(
+          width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
+                          plotOutput("ForecastPlot"))
+        ),
+        column(width = 1)
+      )
     )
-    
   ),
   
   #Main body styling
