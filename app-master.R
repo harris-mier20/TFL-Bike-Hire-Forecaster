@@ -116,10 +116,13 @@ ui <- dashboardPage(
       
       #explanation text
       div(style = "height: 10px;"),
-      div("The service becomes ineffective and potential sales are lost when there is a demand to either
-          start or end a journey, at a given station, more than 30 times in an hour. With 10 notably active hours a day,
-          we can infer that there is lost revenue if the demanded daily activity per station exceeds 300.
-          Therefore, how many more stations are needed in the future?", style = text_body),
+      div("To ensure effective service delivery, prevent potential revenue loss,
+          and maintain the efficiency and profitability of the transportation network,
+          Transport for London (TfL) should proactively expand station infrastructure.
+          By analysing current demand patterns, projecting future growth in ridership 
+          and guiding strategic station expansion plans we can help TFL ensure that the
+          demanded daily activity per station does not exceed supply. This can help TFL
+          remain as profitable as possible by maximising their daily number of riders.", style = text_body),
       
       #Title for second plot
       div(style = "height: 35px;"),
