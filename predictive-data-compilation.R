@@ -52,12 +52,12 @@ dataimputaion <- function(inputdata,days){
   ls <- inputdata
   imputationdata <- rep(list(mean(inputdata)),days)
   ls <- append(ls, imputationdata, after = 0)
-
-
+  
+  
   ls <- ls[dailyactivity.train.begin:dailyactivity.train.end]
-
+  
   return(ls)
-  }
+}
 
 # function which phase shifts an input data by amount of days infills blank space
 #with mean of entire dataset, as its phase shifting it fills the new dataset 
@@ -201,4 +201,5 @@ Location.features.EC4$Meanpast365days <- meaninputs(dailyactivity.train$EC4,365)
 #outputs the dat toa csv file
 Location.features.EC4 <- apply(Location.features.EC4,2,as.character)
 write.csv(Location.features.EC4, "data\\EC4-feature-data.CSV", row.names=FALSE)
+
 
