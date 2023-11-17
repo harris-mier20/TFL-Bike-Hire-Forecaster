@@ -143,7 +143,6 @@ ui <- dashboardPage(
   )
 )
 
-
 server <- function(input, output, session) {
   
   # Initialize a reactiveValues object to store the selected postcode
@@ -326,7 +325,7 @@ server <- function(input, output, session) {
   # Render the postcode title that output is in the sidebar
   output$PostcodeTitle <- renderUI({
     HTML(paste0("<div style='text-align: center; font-size: 30px;
-                font-weight: bold;'>", postcode_title(), "</div>"))
+                font-weight: bold;'>", paste0("Postcode: ",postcode_title()), "</div>"))
   })
   
   #observe for changes and fill in the descriptive statistics using

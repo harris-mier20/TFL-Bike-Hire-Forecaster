@@ -1,5 +1,5 @@
 # Read the data from the CSV files and extract the station names
-data <- read.csv("daily-activity-by-postcode.csv")
+data <- read.csv("data/daily-activity-by-postcode.csv")
 
 #collect data on all stations including a calculation of the activity per station
 #for each postcode

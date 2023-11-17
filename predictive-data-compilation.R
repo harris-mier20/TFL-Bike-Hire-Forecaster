@@ -4,31 +4,34 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 
-setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
-
 #- [ ]  Create new data frame where each row is a day. Columns are:
-#  - [x]  Y - demand on that day
-# - [x]  X1 - demand 7 days earlier
-#- [x]  X2 - demand of 1 month earlier
-#- [x]  X3 - demand of 1 year earlier
-#- [x]  X4 - mean of last 7 days
-#- [x]  X5 - mean of last month
-#- [x]  X6 - mean of last 6 months
-#- [ ]  X7 - temperature on the day
-#- [x]  X8 - day of week
+#- [x]  Y - demand on that day
+#- [x]  X1 - demand of day before
+#- [x]  X2 - demand 7 days earlier
+#- [x]  X3 - demand of 1 month earlier
+#- [x]  X4 - demand of 1 year earlier
+#- [x]  X5 - mean of last 7 days
+#- [x]  X6 - mean of last month
+#- [x]  X7 - mean of last 6 months
+#- [x]  X8 - temperature on the day
+#- [x]  X9 - (1) if work week (-1) if weekend
 
 #reading data in
-dailyactivity <- read.csv("daily-activity-by-postcode.csv")
-weatherdata <- read.csv("weather-data.csv")
+dailyactivity <- read.csv("data/daily-activity-by-postcode.csv")
+weatherdata <- read.csv("data/weather-data.csv")
+
+#training data starts from 2020-06-01, test data ends on 2022-07-05, forecast dates end on 2024-12-31
+#from the weather data, remove all the rows that have dates on the 29th and beyond in each month
+#to fit with the training and test data
+weather_train_data <- weatherdata[1:765,]
 
 #creating a empty template dataframe
-Location.features <- data.frame(matrix(NA, nrow = nrow(dailyactivity), ncol = 10))
-colnames(Location.features) <- c("Date", "Daydemand", "Demand7daysago", "Demand30daysago", "Demand365daysago", "Meanpast7days", "Meanpast30days", "Meanpast365days", "Tempofday","dayofweek")
+Location.features <- data.frame(matrix(NA, nrow = nrow(dailyactivity), ncol = 11))
+colnames(Location.features) <- c("Date", "Daydemand", "Demand1dayago", "Demand7daysago", "Demand30daysago", "Demand365daysago", "Meanpast7days", "Meanpast30days", "Meanpast365days", "Tempofday","dayofweek")
 Location.features$Date <- dailyactivity$Date
 
-
 # function which phase shifts an input data by amount of days infills blank space
-#with mean of entire dataset#
+#with mean of entire dataset.
 dataimputaion <- function(inputdata,days){
   ls <- inputdata
   imputationdata <- rep(list(mean(inputdata)),days)
