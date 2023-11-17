@@ -60,12 +60,12 @@ Location.features.WC1$dayofweek <- dailyactivity$Weekday
 #inserts data for linking the current days demand with the day 7,30 and 365 days
 #ago's demand
 Location.features.WC1$Demand7daysago <- dataimputaion(Location.features.WC1$Daydemand,7)
-Location.features.WC1$Demand30daysago <- dataimputaion(Location.features.WC1$Daydemand,30)
+Location.features.WC1$Demand30daysago <- dataimputaion(Location.features.WC1$Daydemand,28)
 Location.features.WC1$Demand365daysago <- dataimputaion(Location.features.WC1$Daydemand,365)
 #inserts data for linking the current days demand with the past 7,30 and 365 days
 #means
 Location.features.WC1$Meanpast7days <- meaninputs(Location.features.WC1$Daydemand,7)
-Location.features.WC1$Meanpast30days <- meaninputs(Location.features.WC1$Daydemand,30)
+Location.features.WC1$Meanpast30days <- meaninputs(Location.features.WC1$Daydemand,28)
 Location.features.WC1$Meanpast365days <- meaninputs(Location.features.WC1$Daydemand,365)
 
 #outputs the dat toa csv file
