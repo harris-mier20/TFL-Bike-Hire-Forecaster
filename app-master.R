@@ -51,8 +51,7 @@ ui <- dashboardPage(
       #explanation text
       div(style = "height: 10px;"),
       div("The 'Daily Activity' of a postcode is defined as the total number of journeys that started or ended at a bike station
-        within the postcode in a single day. Similarly the 'Activity per Station' is this total daily activity divided by the
-        number of stations that currently exist within that postcode", style = text_body),
+        within the postcode in a single day.", style = text_body),
       
       #render the title for the selected postcode
       div(style = "height: 15px;border-bottom: 2px solid white;"),
@@ -79,7 +78,23 @@ ui <- dashboardPage(
       div(style = "height: 7px;"),
       fluidRow(
         column(width=1),
-        column(width=7, "Activity per Station", style = text_style),
+        column(width=7, "Standard Deviation", style = text_style),
+        column(width=3, uiOutput("sd"), style = text_style)
+      ),
+      
+      #Daily Max
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Maximum Activity", style = text_style),
+        column(width=3, uiOutput("max"), style = text_style)
+      ),
+      
+      #Max ratio
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Max Activity per Station", style = text_style),
         column(width=3, uiOutput("ratio"), style = text_style)
       ),
       
@@ -99,8 +114,15 @@ ui <- dashboardPage(
         column(width = 1)
       ),
       
+      #explanation text
+      div(style = "height: 10px;"),
+      div("The service becomes ineffective and potential sales are lost when there is a demand to either
+          start or end a journey, at a given station, more than 30 times in an hour. With 10 notably active hours a day,
+          we can infer that there is lost revenue if the demanded daily activity per station exceeds 300.
+          Therefore, how many more stations are needed in the future?", style = text_body),
+      
       #Title for second plot
-      div(style = "height: 30px;"),
+      div(style = "height: 35px;"),
       div("Forecast of Future Demand", style = header_style),
       
       #make a plot to present the forecast data, displaying the confidence intervals
@@ -113,7 +135,9 @@ ui <- dashboardPage(
                           plotOutput("ForecastPlot"))
         ),
         column(width = 1)
-      )
+      ),
+      
+      div(style = "height: 100px;")
     )
   ),
   
@@ -335,6 +359,8 @@ server <- function(input, output, session) {
     #search for the values from the data based on the input
     number <- postcode_statistics$Stations[postcode_statistics$Postcode == rv$postcode]
     mean <- postcode_statistics$Mean[postcode_statistics$Postcode == rv$postcode]
+    sd <- postcode_statistics$sd[postcode_statistics$Postcode == rv$postcode]
+    max <- postcode_statistics$max[postcode_statistics$Postcode == rv$postcode]
     ratio <- postcode_statistics$Ratio[postcode_statistics$Postcode == rv$postcode]
     emoji <- postcode_statistics$Emoji[postcode_statistics$Postcode == rv$postcode]
     colour <- postcode_statistics$Colour[postcode_statistics$Postcode == rv$postcode]
@@ -344,6 +370,8 @@ server <- function(input, output, session) {
     #renderText() the values to the UI elements above
     output$number <- renderText(number)
     output$mean <- renderText(mean)
+    output$sd <- renderText(sd)
+    output$max <- renderText(max)
     output$ratio <- renderText({
       HTML(paste0("<span style='font-weight: 600; color:", colour, "'>", ratio_str, "</span>"))
     })

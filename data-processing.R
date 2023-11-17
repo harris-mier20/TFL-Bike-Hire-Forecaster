@@ -5,11 +5,19 @@ data <- read.csv("data/daily-activity-by-postcode.csv")
 #for each postcode
 postcode_labels <- c("ec1","ec2","ec3","ec4","wc1","wc2")
 activity_means <-colMeans(data[3:8])
+activity_sd <- sapply(data[3:8], sd)
+activity_max <- numeric()
+
+#find the max value in each column
+for (i in 3:8){
+  activity_max = c(activity_max, max(data[[i]]))
+}
 
 #hard code the number of stations in each postcode and calculate the
 #ratio of activity to number of stations in each postcode
 n_stations <- c(29,23,9,14,29,23)
-activity_aps <- unlist(Map("/", activity_means, n_stations))
+activity_aps <- unlist(Map("/", activity_max, n_stations))
+activity_sd <- round(activity_sd, digits = 0)
 
 #round the data
 activity_means <- round(activity_means, digits = 0)
@@ -19,6 +27,8 @@ activity_aps <- round(activity_aps, digits = 1)
 postcode_statistics <- data.frame("Postcode" = postcode_labels,
                                   "Stations" = n_stations,
                                   "Mean" = activity_means,
+                                  "sd" = activity_sd,
+                                  "max" = activity_max,
                                   "Ratio"= activity_aps)
 
 #create empty list to fill with emojis and colours to describe data
@@ -27,10 +37,10 @@ colours <- list()
 
 #add emoji and colour information to describe the data - for rendering on the UI
 for (i in 1: length(postcode_statistics$Ratio)){
-  if (postcode_statistics$Ratio[i] >= 90){
+  if (postcode_statistics$Ratio[i] >= 225){
     emojis[i] <- "angry"
     colours[i] <- "red"
-  } else if (postcode_statistics$Ratio[i] >= 80){
+  } else if (postcode_statistics$Ratio[i] >= 200){
     emojis[i] <- "disappointed"
     colours[i] <- "orange"
   } else {
@@ -115,11 +125,6 @@ ec4_data <- data.frame("Date" = dates,
                        "Raw" = raw_ec4,
                        "Smooth" = smooth_ec4)
 
-#for each postcode create a data frame that for every day starting from 2020-06, the columns are:
-#activity for that day, activity 1 day before, activity 7 days before, mean activity for that week,
-#mean activity for that month, activity one year earlier, temperature on that day, rain fall on that day
-
-#weather data is collected from weather-data.csv
 
 
 
