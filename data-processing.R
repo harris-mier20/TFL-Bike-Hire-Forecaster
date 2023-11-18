@@ -1,5 +1,7 @@
 # Read the data from the CSV files and extract the station names
 data <- read.csv("data/daily-activity-by-postcode.csv")
+sim_parameters <- read.csv("data/capacity-simulation/simulation-parameters.csv")
+sim_results <- read.csv("data/capacity-simulation/simulation-results.csv")
 
 #collect data on all stations including a calculation of the activity per station
 #for each postcode

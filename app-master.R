@@ -4,6 +4,7 @@ library(shinydashboard)
 library(fresh)
 library(sf)
 library(emojifont)
+library(shinyjs)
 
 #load in the file that defines all the postcode region borders
 source("create-map-regions.R")
@@ -50,7 +51,7 @@ ui <- dashboardPage(
         
       #explanation text
       div(style = "height: 10px;"),
-      div("The 'Daily Activity' of a postcode is defined as the total number of journeys that started or ended at a bike station
+      div("The 'Daily Activity' of a postcode is defined as the total number of journeys in or out of a bike station
         within the postcode in a single day.", style = text_body),
       
       #render the title for the selected postcode
@@ -62,7 +63,7 @@ ui <- dashboardPage(
       div(style = "height: 15px;"),
       fluidRow(
         column(width=1),
-        column(width=7, "Number of Stations", style = text_style),
+        column(width=7, "Number of Docking Stations", style = text_style),
         column(width=3, uiOutput("number"), style = text_style)
       ),
       
@@ -115,31 +116,31 @@ ui <- dashboardPage(
       ),
       
       #explanation text
-      div(style = "height: 10px;"),
-      div("To ensure effective service delivery, prevent potential revenue loss,
-          and maintain the efficiency and profitability of the transportation network,
-          Transport for London (TfL) should proactively expand station infrastructure.
-          By analysing current demand patterns, projecting future growth in ridership 
-          and guiding strategic station expansion plans we can help TFL ensure that the
-          demanded daily activity per station does not exceed supply. This can help TFL
-          remain as profitable as possible by maximising their daily number of riders.", style = text_body),
+      div(style = "height: 30px;"),
+      div("By running a stochastic simulation to emulate the variable probability of bikes
+          entering and leaving a central london postcode throughout a working day, we can infer that if the
+          daily activity per station exceedes roughly 280, the number of docked bikes will exceed
+          the network's capacity and the service will become ineffective, resulting in a loss in revenue.
+          We optimise the number of proposed new stations to minimise the loss when future demand exceeds
+          an activity of 280 per station, while preventing overspending on new infrastructure.", style = text_body),
       
-      #Title for second plot
+      #Title for simulation plot
       div(style = "height: 35px;"),
-      div("Forecast of Future Demand", style = header_style),
+      div("Daily Capacity Simulation", style = header_style),
       
-      #make a plot to present the forecast data, displaying the confidence intervals
-      #overlay the smoothed data
+      #make a plot to present the simulation results, where docked bikes exceed capacity
       div(style = "height: 7px;"),
       fluidRow(
         column(width = 1),
         column(
-          width = 10, div(style = "border-radius: 15px; height: 250px; overflow: hidden;",
-                          plotOutput("ForecastPlot"))
+          width = 10, div(style = "border-radius: 15px; height: 280px; overflow: hidden;",
+                          plotOutput("SimulationPlot"))
         ),
         column(width = 1)
       ),
       
+      #end section with baseline
+      div(style = "height: 30px;border-bottom: 2px solid white;"),
       div(style = "height: 100px;")
     )
   ),
@@ -171,6 +172,33 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output, session) {
+  
+  #initiate javascript to show model on launch
+  shinyjs::runjs('
+    $(document).ready(function(){
+      // Show the modal when the app starts
+      $("#myModal").modal("show");
+    });
+  ')
+  
+  # Define the modal to display information about the app.
+  showModal(
+    modalDialog(
+      title = "Welcome to the TFL Bike Hire Demand Forecast", "Transport for London (TFL) must proactively expand the santander bike docking station infrastructure.
+          By analysing current demand patterns and projecting future growth in demand, we can
+          advice TFL on strategic station expansion plans, to ensure that the
+          demanded daily activity (the number of journeys in or out of a postcode per day)
+          does not exceed the network's capacity This will help TFL remain as profitable as
+          possible by maximising their daily number of riders, without overspending. Cick a postcode region
+          on the map for more information.",
+      footer = actionButton("modalOkBtn", "OK")
+    )
+  )
+  
+  # Add an observer to close the modal when the OK button is clicked
+  observeEvent(input$modalOkBtn, {
+    removeModal()
+  })
   
   # Initialize a reactiveValues object to store the selected postcode
   rv <- reactiveValues(postcode = "wc1")
@@ -399,24 +427,30 @@ server <- function(input, output, session) {
       values_to_show <- seq(1, length(df$Smooth), length.out = 4)
       axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"), col.axis = "white")  # Set white axis color
       axis(2, col.axis = "white")
-      mtext(text = "Daily Activity", side = 2, line = 3, col = "white", cex = 1.35)
+      mtext(text = "Daily Activity", side = 2, line = 3, col = "white", cex = 1.5)
       
     })
     
-    #plot the forecast of the data and the confidence interval
-    output$ForecastPlot <- renderPlot({
+    #plot the simulation data
+    output$SimulationPlot <- renderPlot({
       par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
       #plot the raw data in a light plot
-      plot(df$Raw, type = "l", col = "#828282", xlab = "", ylab = "",
-           ylim = c(0, 4000),
-           xlim = c(1, length(df$Smooth)), xaxt = "n")
+      plot(sim_results$Capacity, type = "l", col = "#828282", xlab = "", ylab = "",
+           ylim = c(0, 700),
+           xlim = c(1, 6000))
+      lines(sim_results$MaxCapacity, col = "red")
       
-      #manually define the axis labels for the available data
+      #define the legend
+      legend("bottomleft", legend = c("Bikes Docked in Postcode if 280 Journeys per Station per Day", "Max Capacity of Postcode"),
+             col = c("#828282", "red"), lty = 1, lwd = 2, cex = 1.25)
+      
+      #define the axis formatting
       values_to_show <- seq(1, length(df$Smooth), length.out = 4)
-      axis(1, at = values_to_show, labels = c("Aug ’18", "Nov ’19", "Mar ’21", "Jul ’22"), col.axis = "white")  # Set white axis color
+      axis(1, col.axis = "white") 
       axis(2, col.axis = "white")
-      mtext(text = "Forecast Activity", side = 2, line = 3, col = "white", cex = 1.35)
+      mtext(text = "Postcode Capacity", side = 2, line = 3, col = "white", cex = 1.5)
+      mtext(text = "Journeys Made In/Out Over 1 Day in a Single Postcode", side = 1, line = 3, col = "white", cex = 1.5)
       
     })
   })

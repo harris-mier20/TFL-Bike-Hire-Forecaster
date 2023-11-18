@@ -95,7 +95,7 @@ Location.features.WC1$Meanpast365days <- meaninputs(dailyactivity.train$WC1,365)
 
 #outputs the dat toa csv file
 Location.features.WC1 <- apply(Location.features.WC1,2,as.character)
-write.csv(Location.features.WC1, "data\\WC1-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.WC1, "data/feature-data/WC1-feature-data.CSV", row.names=FALSE)
 
 ###creating WC2###
 Location.features.WC2 <- Location.features
@@ -116,7 +116,7 @@ Location.features.WC2$Meanpast365days <- meaninputs(dailyactivity.train$WC2,365)
 
 #outputs the dat toa csv file
 Location.features.WC2 <- apply(Location.features.WC2,2,as.character)
-write.csv(Location.features.WC2, "data\\WC2-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.WC2, "data/feature-data/WC2-feature-data.CSV", row.names=FALSE)
 
 ###creating EC1###
 Location.features.EC1 <- Location.features
@@ -137,7 +137,7 @@ Location.features.EC1$Meanpast365days <- meaninputs(dailyactivity.train$EC1,365)
 
 #outputs the dat toa csv file
 Location.features.EC1 <- apply(Location.features.EC1,2,as.character)
-write.csv(Location.features.EC1, "data\\EC1-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.EC1, "data/feature-data/EC1-feature-data.CSV", row.names=FALSE)
 
 ###creating EC2###
 Location.features.EC2 <- Location.features
@@ -158,7 +158,7 @@ Location.features.EC2$Meanpast365days <- meaninputs(dailyactivity.train$EC2,365)
 
 #outputs the dat toa csv file
 Location.features.EC2 <- apply(Location.features.EC2,2,as.character)
-write.csv(Location.features.EC2, "data\\EC2-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.EC2, "data/feature-data/EC2-feature-data.CSV", row.names=FALSE)
 
 ###creating EC3###
 Location.features.EC3 <- Location.features
@@ -179,7 +179,7 @@ Location.features.EC3$Meanpast365days <- meaninputs(dailyactivity.train$EC3,365)
 
 #outputs the dat toa csv file
 Location.features.EC3 <- apply(Location.features.EC3,2,as.character)
-write.csv(Location.features.EC3, "data\\EC3-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.EC3, "data/feature-data/EC3-feature-data.CSV", row.names=FALSE)
 
 ###creating EC4###
 Location.features.EC4 <- Location.features
@@ -200,6 +200,6 @@ Location.features.EC4$Meanpast365days <- meaninputs(dailyactivity.train$EC4,365)
 
 #outputs the dat toa csv file
 Location.features.EC4 <- apply(Location.features.EC4,2,as.character)
-write.csv(Location.features.EC4, "data\\EC4-feature-data.CSV", row.names=FALSE)
+write.csv(Location.features.EC4, "data/feature-data/EC4-feature-data.CSV", row.names=FALSE)
 
 

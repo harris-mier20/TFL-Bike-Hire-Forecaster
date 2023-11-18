@@ -38,6 +38,8 @@ We have a script named **'data-processing.R'** which processes the data from **'
 
 We have another script called **'predictive-data-compilation.R'**. This script produces data frames for which we can fit models and learn parameters to forecast future demand for the tfl bike system. It pulls in data from **'weather-data.csv'** to add more features that could contribute to the future prediction of demand.
 
+We have a script called **'capacity-simulation.R'**. This runs a simulation that emulates the number of journeys made in and out of a central london postcode on a given day. It assumes that there are 20 docking stations in the postcode. Using information from TFL, we know there are on average 27 docking points in each station and, as such, we can extract the maximum capacity of a postcode as a function of the number of stations. We run a stochastic simulation where the probability of a bike entering the postcode is higher during the morning hours and the probability of a bike leaving the postcode is higher during the evening hours. We adjusted the amount of journeys per station per day to determine that 280 journeys per station per day results in demand consistantly exceeding the maximum capacity. We took this this value forward into the system loss function as the maximum daily activity per station before revenue is lost. The simulation data is outputted into the **'capacity-simulation'** folder in the **'data'** folder found in the root directory.
+
 ### App UI
 The app itself is made using Rshiny. it is launched from **'app-master.R'**. the Shinydashboard library is used to create the structure of the page with a header, sidebar and body.
 
