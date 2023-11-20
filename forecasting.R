@@ -144,8 +144,8 @@ formula_string <- paste("Daydemand ~", paste(selected_features, collapse = " + "
 #create the model for wc1
 wc1.model <- lm(formula_string, rbind(wc1.train,wc1.valid))
 wc1.predict <- predict(model, wc1.test)
-#plot(wc1.test$Daydemand,type='l',ylim=c(0,3500))
-#lines(wc1.predict,type='l',col='red')
+plot(wc1.test$Daydemand,type='l',ylim=c(0,3500))
+lines(wc1.predict,type='l',col='red')
 
 #create models for the other postcodes
 wc1.model <- lm(formula_string, rbind(wc1.train,wc1.valid))
@@ -174,7 +174,6 @@ future_dates <- weatherdata[start_date_index:end_date_index,]$datetime
 
 #create a long term forecast for future bike usage
 ec2.fc.long <- future_forecast(ec2, future_dates, ec2.model)
-plot(ec2.fc.long$Daydemand,type='l')
 
 
 

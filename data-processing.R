@@ -128,6 +128,120 @@ ec4_data <- data.frame("Date" = dates,
                        "Smooth" = smooth_ec4)
 
 
+### - handle the long term forecasting of the app - ###
 
+#create function that interpolates data to restore the full length of data points from a string
+interpolate_data <- function(original_data, new_length) {
+  original_length <- length(original_data)
+  
+  # Create a sequence of indices for the original data
+  original_indices <- seq(1, original_length, length.out = original_length)
+  
+  # Create a sequence of indices for the new data
+  new_indices <- seq(1, original_length, length.out = new_length)
+  
+  # Use the approx function for linear interpolation
+  interpolated_data <- approx(original_indices, original_data, xout = new_indices)$y
+  
+  return(interpolated_data)
+}
+
+#function that takes data and completes Holt Winter forecasting
+holtwinter <- function(data){
+  
+  #define model parameters
+  m  <- 28
+  aa <- 0.5
+  bb <- 0.1
+  gg <- 0.9
+  ti <- 50
+  lv <- 2000
+  bv <- 0
+  sv <- rep(0,m+1)
+  fc <- 60
+  cut <- 50
+  
+  #reduce the data down for the model
+  reduced <- data[seq(1, length(data), length.out = cut)]
+  yt <- reduced
+  
+  #complete holts winter smoothing
+  for (i in 1:m) {
+    lv[i+1] <- aa*yt[i] + (1-aa)*(lv[i]+bv[i]) 
+    bv[i+1] <- bb*(lv[i+1]-lv[i]) + (1-bb)*bv[i] 
+  }
+  for (i in (m+1):ti) {
+    lv[i+1] <- aa*(yt[i]-sv[i+1-m]) + (1-aa)*(lv[i]+bv[i]) 
+    bv[i+1] <- bb*(lv[i+1]-lv[i]) + (1-bb)*bv[i] 
+    sv[i+1] <- gg*(yt[i]-lv[i]-bv[i]) + (1-gg)*sv[i+1-m]
+  }
+  
+  #forecast for a duration defined above
+  kk <- seq(1,fc,1)
+  ik <- floor((kk-1)/m)
+  yf <- lv[i+1] + bv[i+1] * kk + sv[i+1+kk-m*(ik+1)]
+  
+  #combine and interpolate data to return it to the previous resolution
+  modelled_data <- c(lv,yf)
+  return_data <- interpolate_data(modelled_data, round(length(data)*((cut+fc)/cut)))
+  return(return_data)
+}
+
+#function to fill in space with future dates
+get_dates_sequence <- function(start_date, length_of_list) {
+  date_sequence <- seq(as.Date(start_date), by = "days", length.out = length_of_list)
+  return(date_sequence)
+}
+
+#define the dates for which we are fitting the holt-winters forecast
+dates <- data$Date
+start_date_index <- which(data$Date == '2020-07-01')
+end_date_index <- length(data$Date)
+
+#prepare all the data for the forecast plot
+#WC1
+wc1 <- smooth_data(data$WC1,0.025,1250)[start_date_index:end_date_index]
+wc1.model <- holtwinter(wc1)
+pad <- rep(NaN,length(wc1.model)-length(wc1))
+wc1 <- c(wc1,pad)
+
+#wc2
+wc2 <- smooth_data(data$WC2,0.025,1250)[start_date_index:end_date_index]
+wc2.model <- holtwinter(wc2)
+wc2 <- c(wc2,pad)
+
+#ec1
+ec1 <- smooth_data(data$EC1,0.025,1250)[start_date_index:end_date_index]
+ec1.model <- holtwinter(ec1)
+ec1 <- c(ec1,pad)
+
+#ec2
+ec2 <- smooth_data(data$EC2,0.025,1250)[start_date_index:end_date_index]
+ec2.model <- holtwinter(ec2)
+ec2 <- c(ec2,pad)
+
+#ec3
+ec3 <- smooth_data(data$EC3,0.025,1250)[start_date_index:end_date_index]
+ec3.model <- holtwinter(ec3)
+ec3 <- c(ec3,pad)
+
+#ec4
+ec4 <- smooth_data(data$EC4,0.025,1250)[start_date_index:end_date_index]
+ec4.model <- holtwinter(ec4)
+ec4 <- c(ec4,pad)
+
+#Date
+date <- data$Date[start_date_index:end_date_index]
+date_pad <- as.character((get_dates_sequence(date[length(date)], ((length(wc1.model)-length(date))+1)))[-1])
+date <- append(date,date_pad)
+
+#create a data frame with the date and then the measured and forecast activity
+#each postcode
+forecast <- data.frame("Date"=date, "WC1measured"=wc1, "WC1modelled"=wc1.model,
+                       "WC2measured"=wc2, "WC2modelled"=wc2.model,
+                       "EC1measured"=ec1, "EC1modelled"=ec1.model,
+                       "EC2measured"=ec2, "EC2modelled"=ec2.model,
+                       "EC3measured"=ec3, "EC3modelled"=ec3.model,
+                       "EC4measured"=ec4, "EC4modelled"=ec4.model)
 
 
