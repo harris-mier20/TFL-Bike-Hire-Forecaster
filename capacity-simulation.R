@@ -1,3 +1,38 @@
+library(lubridate)
+library(data.table)
+library(dplyr)
+library(ggplot2)
+#Getting a list of all stations within London along with their postcodes
+stationinfo <- read.csv("data/station-postcodes-central.csv")
+
+#defining which postcodes are to be included in the output dataset c("W1","WC","EC")(all central london postcode first two letters)
+twol <- c("EC1","EC2","EC3","EC4","WC1","WC2")
+
+source("data-preprocessing/get-postcode-usage.R")
+
+stationinfon <- stationexrtraction.list(stationinfo,twol)
+
+tfl_bike_daily_activity_central_london <- read_csv("data/tfl-bike-daily-activity-central-london.csv")
+
+names(tfl_bike_daily_activity_central_london)<-make.names(names(tfl_bike_daily_activity_central_london),unique = TRUE)
+
+df <- read_csv("data/daily-activity-by-postcode.csv")
+
+for ( i in 1:length(stationinfon)){
+  selectedpostcode <- tfl_bike_daily_activity_central_london[stationinfon[[i]]]
+  X <- ncol(selectedpostcode)
+  selectedpostcode$Total_0s<-rowSums(selectedpostcode==0)
+  selectedpostcode$Total_0s<-X - selectedpostcode$Total_0s
+  X <- ncol(df) + 1
+  df$X <- selectedpostcode$Total_0s
+  names(df)[X] <- paste(names(stationinfon)[i],".num.of.sattions")
+}
+
+selectedpostcode$Date<-tfl_bike_daily_activity_central_london$Date
+
+
+
+
 #define simulation parameters
 n_stations = 20
 docks_per_station = 27 #ref https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
