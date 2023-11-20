@@ -6,10 +6,10 @@ library(ggplot2)
 #set the wd 
 #setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
 
-dailyactivity <- read.csv("tfl-bike-daily-activity-central-london.csv")
+dailyactivity <- read.csv("data/tfl-bike-daily-activity-central-london.csv")
 
 #Getting a list of all stations within London along with their postcodes
-stationinfo <- read.csv("station-postcodes-central.csv")
+stationinfo <- read.csv("data/station-postcodes-central.csv")
 
 #defining which postcodes are to be included in the output dataset c("W1","WC","EC")(all central london postcode first two letters)
 twol <- c("EC1","EC2","EC3","EC4","WC1","WC2")
