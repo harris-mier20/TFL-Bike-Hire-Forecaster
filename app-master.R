@@ -30,6 +30,7 @@ my_theme <- create_theme(
 title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400;"
 header_style <- "font-family: 'Hammersmith One', sans-serif; font-size:130%; text-align: center; font-weight: 600;"
 text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
+bold_text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; font-weight: 600;"
 text_body <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; padding-left:5%; padding-right:5%"
 
 #header styling
@@ -141,8 +142,109 @@ ui <- dashboardPage(
       
       #end section with baseline
       div(style = "height: 30px;border-bottom: 2px solid white;"),
-      div(style = "height: 100px;")
-    )
+      
+      #explanation of forecasting
+      div(style = "height: 30px;"),
+      div("Now, given previous knowldge of trends in demand and weather data the demand can be forecasted for a following day.
+          This could be used, for instance, to estimate maintenence requirements for a following day. The model can be constructed
+          by weighting the following values accordingly.", style = text_body),
+      
+      #state model
+      div(style = "height: 25px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Intercept", style = text_style),
+        column(width=3, uiOutput("intercept"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Demand 1 day ago", style = text_style),
+        column(width=3, uiOutput("1day"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Demand 7 days ago", style = text_style),
+        column(width=3, uiOutput("7day"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Average demand last 7 days", style = text_style),
+        column(width=3, uiOutput("7dayav"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Average demand last 365 days", style = text_style),
+        column(width=3, uiOutput("365dayav"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Average Temperature on day (degC)", style = text_style),
+        column(width=3, uiOutput("temp"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Wind on day (mph)", style = text_style),
+        column(width=3, uiOutput("wind"), style = text_style)
+      ),
+      div(style = "height: 15px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "Rainfall on day (mm)", style = text_style),
+        column(width=3, uiOutput("rain"), style = text_style)
+      ),
+      div(style = "height: 25px;"),
+      fluidRow(
+        column(width=1),
+        column(width=7, "RMSE on Test Data", style = bold_text_style),
+        column(width=3, uiOutput("rmse"), style = bold_text_style)
+      ),
+      
+      #Title for short forecast plot
+      div(style = "height: 35px;"),
+      div("1 Day Forecast", style = header_style),
+      
+      #make a plot to present the simulation results, where docked bikes exceed capacity
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width = 1),
+        column(
+          width = 10, div(style = "border-radius: 15px; height: 280px; overflow: hidden;",
+                          plotOutput("Shortforecastplot"))
+        ),
+        column(width = 1)
+      ),
+      
+      #explanation of long term forecasting
+      div(style = "height: 30px;"),
+      div("This type of forecast is only effective for short term forecasting as error accumilates rapidly.
+          We use a Holt-Winters approach to make long term forecasts using trends in the data.", style = text_body),
+      
+      #Title for long forecast plot
+      div(style = "height: 35px;"),
+      div("Long Term Forecast", style = header_style),
+      
+      #make a plot to present the simulation results, where docked bikes exceed capacity
+      div(style = "height: 7px;"),
+      fluidRow(
+        column(width = 1),
+        column(
+          width = 10, div(style = "border-radius: 15px; height: 280px; overflow: hidden;",
+                          plotOutput("Longforecastplot"))
+        ),
+        column(width = 1)
+      ),
+      
+      #end section with baseline
+      div(style = "height: 30px;border-bottom: 2px solid white;"),
+      
+      div(style = "height: 200px;")
+      )
   ),
   
   #Main body styling
@@ -421,7 +523,7 @@ server <- function(input, output, session) {
            xlim = c(1, length(df$Smooth)), xaxt = "n")
       
       #overlay and highlight the smoothed data
-      lines(df$Smooth, col = "red")
+      lines(df$Smooth, lwd = 3, col = "red")
       
       #manually define the axis labels for the available data
       values_to_show <- seq(1, length(df$Smooth), length.out = 4)
@@ -436,10 +538,10 @@ server <- function(input, output, session) {
       par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
       #plot the raw data in a light plot
-      plot(sim_results$Capacity, type = "l", col = "#828282", xlab = "", ylab = "",
+      plot(sim_results$Capacity, type = "l", lwd = 3, col = "#828282", xlab = "", ylab = "",
            ylim = c(0, 700),
            xlim = c(1, 6000))
-      lines(sim_results$MaxCapacity, col = "red")
+      lines(sim_results$MaxCapacity, lwd = 3, col = "red")
       
       #define the legend
       legend("bottomleft", legend = c("Bikes Docked in Postcode if 280 Journeys per Station per Day", "Max Capacity of Postcode"),
@@ -453,6 +555,70 @@ server <- function(input, output, session) {
       mtext(text = "Journeys Made In/Out Over 1 Day in a Single Postcode", side = 1, line = 3, col = "white", cex = 1.5)
       
     })
+    
+    #render information about the short forecast model
+    vars <- get(paste0(rv$postcode,".values"))
+    rmse <- get(paste0(rv$postcode,".rmse"))
+    shortforecast_observed <- get(paste0(rv$postcode,".test"))
+    shortforecast_fc <- get(paste0(rv$postcode,".predict"))
+    
+    output$'intercept' <- renderText(round(vars[1],digits=2))
+    output$'1day' <- renderText(round(vars[2],digits=2))
+    output$'7day' <- renderText(round(vars[3],digits=2))
+    output$'7dayav' <- renderText(round(vars[4],digits=2))
+    output$'365dayav' <- renderText(round(vars[5],digits=2))
+    output$'temp' <- renderText(round(vars[6],digits=2))
+    output$'wind' <- renderText(round(vars[7],digits=2))
+    output$'rain' <- renderText(round(vars[8],digits=2))
+    output$rmse <- renderText(rmse)
+    
+    #plot the short term forecast
+    output$Shortforecastplot <- renderPlot({
+      par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
+      
+      #plot the raw data in a light plot
+      plot(shortforecast_observed$Daydemand, type = "l", lwd = 3, col = "#828282", xlab = "", ylab = "",
+           ylim = c(0, 4000),
+           xlim = c(1, length(shortforecast_observed$Daydemand)), xaxt = "n")
+      lines(shortforecast_fc, lwd = 2, col = "red")
+      
+      #define the legend
+      legend("bottomright", legend = c("Observed Activity", "Forecasted Activity"),
+             col = c("#828282", "red"), lty = 1, lwd = 2, cex = 1.25)
+      
+      #manually define the axis labels for the available data
+      values_to_show <- seq(1, length(shortforecast_observed$Daydemand), length.out = 4)
+      axis(1, at = values_to_show, labels = c("Feb ’22", "Apr ’22", "Jun ’22", "Aug ’22"), col.axis = "white")  # Set white axis color
+      axis(2, col.axis = "white")
+      mtext(text = "Daily Activity", side = 2, line = 3, col = "white", cex = 1.5)
+      
+    })
+    
+    #plot the long term forecast
+    longforecast_observed <- get(paste0(rv$postcode,".obs"))
+    longforecast_fc <- get(paste0(rv$postcode,".model"))
+    
+    output$Longforecastplot <- renderPlot({
+      par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
+      
+      #plot the raw data in a light plot
+      plot(longforecast_observed, type = "l", lwd = 3, col = "#828282", xlab = "", ylab = "",
+           ylim = c(0, 5000),
+           xlim = c(1, length(longforecast_fc)), xaxt = "n")
+      lines(longforecast_fc, lwd = 2, col = "red")
+      
+      #define the legend
+      legend("bottomright", legend = c("Observed Activity", "Forecasted Activity"),
+             col = c("#828282", "red"), lty = 1, lwd = 2, cex = 1.25)
+      
+      #manually define the axis labels for the available data
+      values_to_show <- seq(1, length(longforecast_fc), length.out = 4)
+      axis(1, at = values_to_show, labels = c("Jul ’20", "Jan ’22", "Jun ’23", "Oct ’24"), col.axis = "white")  # Set white axis color
+      axis(2, col.axis = "white")
+      mtext(text = "Daily Activity", side = 2, line = 3, col = "white", cex = 1.5)
+      
+    })
+    
   })
   
 }
