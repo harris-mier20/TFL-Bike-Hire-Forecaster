@@ -217,9 +217,9 @@ Location.features.EC4$Demand30daysago <- dataimputation(dailyactivity$EC4,30)
 Location.features.EC4$Demand365daysago <- dataimputation(dailyactivity$EC4,365)
 #inserts data for linking the current days demand with the past 7,30 and 365 days
 #means
-Location.features.EC4$Meanpast7days <- mean_array(dailyactivity.train$EC4,7)
-Location.features.EC4$Meanpast30days <- mean_array(dailyactivity.train$EC4,30)
-Location.features.EC4$Meanpast365days <- mean_array(dailyactivity.train$EC4,365)
+Location.features.EC4$Meanpast7days <- mean_array(dailyactivity$EC4,7)
+Location.features.EC4$Meanpast30days <- mean_array(dailyactivity$EC4,30)
+Location.features.EC4$Meanpast365days <- mean_array(dailyactivity$EC4,365)
 
 #outputs the dat toa csv file
 Location.features.EC4 <- apply(Location.features.EC4,2,as.character)

@@ -3,6 +3,9 @@ data <- read.csv("data/daily-activity-by-postcode.csv")
 sim_parameters <- read.csv("data/capacity-simulation/simulation-parameters.csv")
 sim_results <- read.csv("data/capacity-simulation/simulation-results.csv")
 
+#load in the file that defines all the postcode region borders
+source("short-forecasting.R")
+
 #collect data on all stations including a calculation of the activity per station
 #for each postcode
 postcode_labels <- c("ec1","ec2","ec3","ec4","wc1","wc2")
@@ -200,48 +203,37 @@ end_date_index <- length(data$Date)
 
 #prepare all the data for the forecast plot
 #WC1
-wc1 <- smooth_data(data$WC1,0.025,1250)[start_date_index:end_date_index]
-wc1.model <- holtwinter(wc1)
+wc1.obs <- smooth_data(data$WC1,0.025,1250)[start_date_index:end_date_index]
+wc1.model <- holtwinter(wc1.obs)
 pad <- rep(NaN,length(wc1.model)-length(wc1))
-wc1 <- c(wc1,pad)
+wc1.obs <- c(wc1.obs,pad)
 
 #wc2
-wc2 <- smooth_data(data$WC2,0.025,1250)[start_date_index:end_date_index]
-wc2.model <- holtwinter(wc2)
-wc2 <- c(wc2,pad)
+wc2.obs <- smooth_data(data$WC2,0.025,1250)[start_date_index:end_date_index]
+wc2.model <- holtwinter(wc2.obs)
+wc2.obs <- c(wc2.obs,pad)
 
 #ec1
-ec1 <- smooth_data(data$EC1,0.025,1250)[start_date_index:end_date_index]
-ec1.model <- holtwinter(ec1)
-ec1 <- c(ec1,pad)
+ec1.obs <- smooth_data(data$EC1,0.025,1250)[start_date_index:end_date_index]
+ec1.model <- holtwinter(ec1.obs)
+ec1.obs <- c(ec1.obs,pad)
 
 #ec2
-ec2 <- smooth_data(data$EC2,0.025,1250)[start_date_index:end_date_index]
-ec2.model <- holtwinter(ec2)
-ec2 <- c(ec2,pad)
+ec2.obs <- smooth_data(data$EC2,0.025,1250)[start_date_index:end_date_index]
+ec2.model <- holtwinter(ec2.obs)
+ec2.obs <- c(ec2.obs,pad)
 
 #ec3
-ec3 <- smooth_data(data$EC3,0.025,1250)[start_date_index:end_date_index]
-ec3.model <- holtwinter(ec3)
-ec3 <- c(ec3,pad)
+ec3.obs <- smooth_data(data$EC3,0.025,1250)[start_date_index:end_date_index]
+ec3.model <- holtwinter(ec3.obs)
+ec3.obs <- c(ec3.obs,pad)
 
 #ec4
-ec4 <- smooth_data(data$EC4,0.025,1250)[start_date_index:end_date_index]
-ec4.model <- holtwinter(ec4)
-ec4 <- c(ec4,pad)
+ec4.obs <- smooth_data(data$EC4,0.025,1250)[start_date_index:end_date_index]
+ec4.model <- holtwinter(ec4.obs)
+ec4.obs <- c(ec4.obs,pad)
 
 #Date
-date <- data$Date[start_date_index:end_date_index]
-date_pad <- as.character((get_dates_sequence(date[length(date)], ((length(wc1.model)-length(date))+1)))[-1])
-date <- append(date,date_pad)
-
-#create a data frame with the date and then the measured and forecast activity
-#each postcode
-forecast <- data.frame("Date"=date, "WC1measured"=wc1, "WC1modelled"=wc1.model,
-                       "WC2measured"=wc2, "WC2modelled"=wc2.model,
-                       "EC1measured"=ec1, "EC1modelled"=ec1.model,
-                       "EC2measured"=ec2, "EC2modelled"=ec2.model,
-                       "EC3measured"=ec3, "EC3modelled"=ec3.model,
-                       "EC4measured"=ec4, "EC4modelled"=ec4.model)
-
-
+date.fc <- data$Date[start_date_index:end_date_index]
+date_pad <- as.character((get_dates_sequence(date.fc[length(date.fc)], ((length(wc1.model)-length(date.fc))+1)))[-1])
+date.fc <- append(date.fc,date_pad)
