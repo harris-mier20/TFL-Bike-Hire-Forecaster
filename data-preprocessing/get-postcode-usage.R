@@ -58,6 +58,10 @@ stationexrtraction.list <- function(stationset,postcodes){
 
 stationinfon <- stationexrtraction.list(stationinfo,twol)
 
+# plot daily activty of the stations within a postcode area
+
+
+
 #splits a data frame into a new data frame containing only the locations within a 
 #a postcode area
 listofdataframes <- list()

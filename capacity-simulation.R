@@ -28,12 +28,14 @@ for ( i in 1:length(stationinfon)){
   selectedpostcode$Total_0s<-X - selectedpostcode$Total_0s
   X <- ncol(df) + 1
   df$X <- selectedpostcode$Total_0s
-  names(df)[X] <- paste(names(stationinfon)[i],".num.of.sattions")
+  names(df)[X] <- paste(names(stationinfon)[i],".num.of.stations")
 }
 
 selectedpostcode$Date<-tfl_bike_daily_activity_central_london$Date
 
+names(df)<-make.names(names(df),unique = TRUE)
 
+ggplot(df, aes(x=EC1.num.of.stations, y=EC1)) + geom_line() + ggtitle("postcode[i]")
 
 
 #define simulation parameters
