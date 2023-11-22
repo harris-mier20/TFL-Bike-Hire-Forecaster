@@ -1,6 +1,7 @@
 library(lubridate)
 library(data.table)
 library(dplyr)
+library(readr)
 library(ggplot2)
 #Getting a list of all stations within London along with their postcodes
 stationinfo <- read.csv("data/station-postcodes-central.csv")
@@ -17,6 +18,8 @@ tfl_bike_daily_activity_central_london <- read_csv("data/tfl-bike-daily-activity
 names(tfl_bike_daily_activity_central_london)<-make.names(names(tfl_bike_daily_activity_central_london),unique = TRUE)
 
 df <- read_csv("data/daily-activity-by-postcode.csv")
+
+selectedpostcode <- tfl_bike_daily_activity_central_london[stationinfon[[2]]]
 
 for ( i in 1:length(stationinfon)){
   selectedpostcode <- tfl_bike_daily_activity_central_london[stationinfon[[i]]]
