@@ -6,6 +6,8 @@ library(sf)
 library(emojifont)
 library(shinyjs)
 
+library(plotly)
+
 #load in the file that defines all the postcode region borders
 source("create-map-regions.R")
 
@@ -135,7 +137,7 @@ ui <- dashboardPage(
         column(width = 1),
         column(
           width = 10, div(style = "border-radius: 15px; height: 280px; overflow: hidden;",
-                          plotOutput("SimulationPlot"))
+                          plotlyOutput("SimulationPlot"))
         ),
         column(width = 1)
       ),
@@ -534,25 +536,44 @@ server <- function(input, output, session) {
     })
     
     #plot the simulation data
-    output$SimulationPlot <- renderPlot({
+
+    output$SimulationPlot <- renderPlotly({
       par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
-      #plot the raw data in a light plot
-      plot(sim_results$Capacity, type = "l", lwd = 3, col = "#828282", xlab = "", ylab = "",
-           ylim = c(0, 700),
-           xlim = c(1, 6000))
-      lines(sim_results$MaxCapacity, lwd = 3, col = "red")
+      plot_ly() %>%
+        # Add trace for 'Bikes Docked in Postcode if 280 Journeys per Station per Day'
+        add_trace(
+          x = seq(0, nrow(sim_results) - 1),  # x-axis values, assuming a sequential index
+          y = ~sim_results$Capacity,  # y-axis values
+          type = 'scatter',
+          mode = 'lines',
+          hovertemplate = 'Number of docked bikes: %{y:.2f}<extra></extra>',  # Hover text template
+          line = list(color = '#828282', width = 3),  # Line properties
+          name = 'Bikes Docked in Postcode if 280 Journeys per Station per Day'  # Trace name for legend
+        ) %>%
+        # Add trace for 'Max Capacity of Postcode'
+        add_trace(
+          x = seq(0, nrow(sim_results) - 1),  # x-axis values, assuming a sequential index
+          y = ~sim_results$MaxCapacity,  # y-axis values
+          type = 'scatter',
+          mode = 'lines',
+          hovertemplate = 'Max capacity of station: %{y:.2f}<extra></extra>',  # Hover text template
+          line = list(color = 'red', width = 3),  # Line properties
+          name = 'Max Capacity of Postcode'  # Trace name for legend
+        ) %>%
+        layout(
+          xaxis = list(title = "Journeys Made In/Out Over 1 Day in a Single Postcode", color = 'white'),
+          yaxis = list(title = "Postcode Capacity", range = c(0, 1200), color = 'white'),
+          legend = list(x = 0, y = -0.1),
+          margin = list(l = 50, r = 50, b = 50, t = 50),
+          paper_bgcolor = rgb(99/255,99/255,99/255),
+          plot_bgcolor = rgb(99/255,99/255,99/255),
+          font = list(color = 'white'),
+          title = 'Bike Docking Simulation Results',
+          showlegend = TRUE
+        )
       
-      #define the legend
-      legend("bottomleft", legend = c("Bikes Docked in Postcode if 280 Journeys per Station per Day", "Max Capacity of Postcode"),
-             col = c("#828282", "red"), lty = 1, lwd = 2, cex = 1.25)
       
-      #define the axis formatting
-      values_to_show <- seq(1, length(df$Smooth), length.out = 4)
-      axis(1, col.axis = "white") 
-      axis(2, col.axis = "white")
-      mtext(text = "Postcode Capacity", side = 2, line = 3, col = "white", cex = 1.5)
-      mtext(text = "Journeys Made In/Out Over 1 Day in a Single Postcode", side = 1, line = 3, col = "white", cex = 1.5)
       
     })
     
