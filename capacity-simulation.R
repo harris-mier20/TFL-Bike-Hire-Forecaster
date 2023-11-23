@@ -28,80 +28,139 @@ for ( i in 1:length(stationinfon)){
   selectedpostcode$Total_0s<-X - selectedpostcode$Total_0s
   X <- ncol(df) + 1
   df$X <- selectedpostcode$Total_0s
-  names(df)[X] <- paste(names(stationinfon)[i],".num.of.stations")
+  names(df)[X] <- paste0(names(stationinfon)[i],".num.of.stations")
 }
 
 selectedpostcode$Date<-tfl_bike_daily_activity_central_london$Date
 
-names(df)<-make.names(names(df),unique = TRUE)
 
-ggplot(df, aes(x=EC1.num.of.stations, y=EC1)) + geom_line() + ggtitle("postcode[i]")
 
+
+### a function which outputs simulation results based of input
+
+capacity.simulation <- function(n_stations,activity_per_station,initial_fill_percentage,active_hours,docks_per_station){
+  
+  #derive simulation parameters from variables
+  total_docks = n_stations*docks_per_station
+  initial_full_docks = round((initial_fill_percentage*total_docks), digits = 0)
+  daily_activity = n_stations*activity_per_station/n_stations
+  
+  #create array that randomly represents the number of transactions that occur in
+  #each of the 10 active hours of the day, most transactions will occur in hour 3 and hour 8
+  print(active_hours)
+  hourly <- abs(rnorm(active_hours))
+  hourly[3] <- max(abs(hourly))
+  hourly[8] <- max(abs(hourly))
+  print(hourly)
+  hourly <- round(hourly / sum(hourly) * daily_activity)
+  print("hourly")
+  print(hourly)
+  print("capacity")
+  
+  #create an array of 0s or 1s where each represents a user action
+  #(1) represents a user arriving at a station
+  #(-1) represents a user taking a bike from a station
+  #for central london, in earlier hours the the probability of a user arriving is higher
+  #in later hours the probability of a user leaving is higher
+  #transaction
+  # set probability based on this https://www.tomtom.com/traffic-index/london-traffic/
+  #probability = seq(0.7, 0.3, length.out = active_hours)
+  proportion <- c(1.44,1.32,1.12,0.87,0.49,0.30,0.82,4.91,12.66,11.96,4.02,2.88,
+    2.96,3.05,3.37,6.05,8.19,10.13,9.26,4.99,3.00,2.16,1.97,2.08)
+  # probability based from chart 10 here https://assets.publishing.service.gov.uk/media/5b57023440f0b63391c87ff6/rail-passengers-crowding-2017.pdf
+  probability <- c(0.50,0.40,0.71,0.77,0.86,0.83,0.46,0.90,0.83,0.73,0.69,0.62,0.54,
+                   0.46,0.44,0.41,0.31,0.17,0.14,0.17,0.14,0.18,0.14,0.17)
+  print("probability")
+  print(probability)
+  activity=numeric()
+  print("capacity")
+  for (i in 1:length(hourly)){
+    for (j in 1:((proportion[i]*daily_activity)%/%100)){
+      random_array <- sample(c(1, -1), size = hourly[i], replace = TRUE,
+                            prob = c(probability[i], 1 - probability[i]))
+      activity=c(activity,random_array)
+    }
+  }
+  print("activity")
+  print(activity)
+  print("capacity")
+  #loop through the all the activity, add one to the capacity if a user brings in a bike,
+  #subtract one from the capacity if a bike is taken 
+  capacity=numeric()
+  capacity=c(capacity,initial_full_docks)
+  print("capacity")
+  for (i in 1:length(activity)){
+    new_capacity = capacity[length(capacity)] + activity[i]
+    capacity=c(capacity,new_capacity)
+  }
+  #create array to plot the maximum capacity
+  max_capacity = rep(total_docks, times = length(capacity))
+  
+  simulation_parameters = data.frame(
+    "NumberStations" = n_stations,
+    "ActivityPerStation" = activity_per_station,
+    "MaxCapacity" = total_docks
+  )
+  
+  simulation_results = data.frame(
+    "MaxCapacity" = max_capacity,
+    "Capacity" = capacity
+  )
+  return(list(simulation_parameters,simulation_results,capacity,max_capacity))
+}
+
+# function which takes in the date, postcode area, infil percentage active hours
+# and docks per station as inputs for the simulation
+# and returns a list of the parameters in following order:
+# n_stations,
+#activity_per_station
+#infill_percentage
+#active_hours
+#docks_per_station
+# it pulls the number of stations and activity per station from the dataframe 
+# based on an input date and chosen area
+input.parameter.pull <- function(date,postcode,df,infill_percentage,active_hours,docks_per_station){
+  #pull the input parameters from the dashboard
+  df <- df
+  infill_percentage = infill_percentage
+  active_hours = active_hours
+  docks_per_station = docks_per_station
+  n_stations = df[df$Date == date, paste0(postcode,".num.of.stations")]
+  activity_per_station = (df[df$Date == date, postcode])/n_stations
+  return(list(n_stations,activity_per_station,infill_percentage,active_hours,docks_per_station))
+}
 
 #define simulation parameters
-n_stations = 20
-docks_per_station = 27 #ref https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
-active_hours = 10
-initial_fill_percentage = 0.15 #25% of the central London docking points are full in the morning
+#n_stations = 20
+#docks_per_station = 27 #ref https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
+#active_hours = 10
+#initial_fill_percentage = 0.15 #25% of the central London docking points are full in the morning
 
 #adjust the number of daily transactions of the model
-activity_per_station = 280
+#activity_per_station = 280
 
-#derive simulation parameters from variables
-total_docks = n_stations*docks_per_station
-initial_full_docks = round((initial_fill_percentage*total_docks), digits = 0)
-daily_activity = n_stations*activity_per_station
 
-#create array that randomly represents the number of transactions that occur in
-#each of the 10 active hours of the day, most transactions will occur in hour 3 and hour 8
-hourly <- abs(rnorm(active_hours))
-hourly[3] <- max(abs(hourly))
-hourly[8] <- max(abs(hourly))
-hourly <- round(hourly / sum(hourly) * daily_activity)
-
-#create an array of 0s or 1s where each represents a user action
-#(1) represents a user arriving at a station
-#(-1) represents a user taking a bike from a station
-#for central london, in earlier hours the the probability of a user arriving is higher
-#in later hours the probability of a user leaving is higher
-#transaction
-probability = seq(0.7, 0.3, length.out = active_hours)
-activity=numeric()
-for (i in 1:length(hourly)){
-  random_array <- sample(c(1, -1), size = hourly[i], replace = TRUE,
-                         prob = c(probability[i], 1 - probability[i]))
-  activity=c(activity,random_array)
-}
-
-#loop through the all the activity, add one to the capacity if a user brings in a bike,
-#subtract one from the capacity if a bike is taken 
-capacity=numeric()
-capacity=c(capacity,initial_full_docks)
-for (i in 1:length(activity)){
-  new_capacity = capacity[length(capacity)] + activity[i]
-  capacity=c(capacity,new_capacity)
-}
-
-#create array to plot the maximum capacity
-max_capacity = rep(total_docks, times = length(capacity))
-
-simulation_parameters = data.frame(
-  "NumberStations" = n_stations,
-  "ActivityPerStation" = activity_per_station,
-  "MaxCapacity" = total_docks
-)
-
-simulation_results = data.frame(
-  "MaxCapacity" = max_capacity,
-  "Capacity" = capacity
-)
+par <- input.parameter.pull("2018-08-01","WC1",df,0.15,24,27)
 
 #save these parameters and results in csvs to reference in the dashboard
-write.csv(simulation_parameters, "data/capacity-simulation/simulation-parameters.csv", row.names=FALSE)
-write.csv(simulation_results, "data/capacity-simulation/simulation-results.csv", row.names=FALSE)
+#simulation_parameters = capacity.simulation(n_stations,docks_per_station,active_hours,initial_fill_percentage,activity_per_station)[1]
+#write.csv(simulation_parameters, "data/capacity-simulation/simulation-parameters.csv", row.names=FALSE)
+#simulation_results = capacity.simulation(n_stations,docks_per_station,active_hours,initial_fill_percentage,activity_per_station)[2]
+#write.csv(simulation_results, "data/capacity-simulation/simulation-results.csv", row.names=FALSE)
 
 #plot the data
-plot(capacity, type = 'l', xlab="Journey Made In/Out Postcode", 
-     ylab="Bikes Docked in Postcode", ylim = c(0,600))
-lines(max_capacity, color = 'red')
+capacity = capacity.simulation(par[[1]][[1]],par[[2]][[1]],par[[3]][[1]],par[[4]][[1]],par[[5]][[1]])[3]
+max_capacity = capacity.simulation(par[[1]][[1]],par[[2]][[1]],par[[3]][[1]],par[[4]][[1]],par[[5]][[1]])[4]
+
+
+
+plot(seq(0,length(capacity[[1]])-1),capacity[[1]], type = 'l', xlab="Journey Made In/Out Postcode", ylab="Bikes Docked in Postcode", ylim = c(0,600))
+print(max(capacity[[1]]))
+#lines(max_capacity, color = 'red')
+
+
+
+
+
+
 
