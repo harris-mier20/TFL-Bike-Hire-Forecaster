@@ -43,7 +43,7 @@ capacity.simulation <- function(n_stations,activity_per_station,initial_fill_per
   #derive simulation parameters from variables
   total_docks = n_stations*docks_per_station
   initial_full_docks = round((initial_fill_percentage*total_docks), digits = 0)
-  daily_activity = n_stations*activity_per_station/n_stations
+  daily_activity = n_stations*activity_per_station
   
   #create array that randomly represents the number of transactions that occur in
   #each of the 10 active hours of the day, most transactions will occur in hour 3 and hour 8
@@ -74,12 +74,17 @@ capacity.simulation <- function(n_stations,activity_per_station,initial_fill_per
   print(probability)
   activity=numeric()
   print("capacity")
-  for (i in 1:length(hourly)){
+  
+  for (i in 1:active_hours){
+    hour_activity=numeric()
     for (j in 1:((proportion[i]*daily_activity)%/%100)){
+      hourly[i] = 1
       random_array <- sample(c(1, -1), size = hourly[i], replace = TRUE,
                             prob = c(probability[i], 1 - probability[i]))
-      activity=c(activity,random_array)
+      hour_activity=c(hour_activity,random_array)
+      hour_activity = sum(hour_activity)
     }
+    activity=c(activity,hour_activity)
   }
   print("activity")
   print(activity)
@@ -131,13 +136,13 @@ input.parameter.pull <- function(date,postcode,df,infill_percentage,active_hours
 }
 
 #define simulation parameters
-#n_stations = 20
-#docks_per_station = 27 #ref https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
-#active_hours = 10
-#initial_fill_percentage = 0.15 #25% of the central London docking points are full in the morning
+n_stations = 20
+docks_per_station = 27 #ref https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
+active_hours = 24
+initial_fill_percentage = 0.15 #25% of the central London docking points are full in the morning
 
 #adjust the number of daily transactions of the model
-#activity_per_station = 280
+activity_per_station = 250
 
 
 par <- input.parameter.pull("2018-08-01","WC1",df,0.15,24,27)
@@ -149,13 +154,16 @@ par <- input.parameter.pull("2018-08-01","WC1",df,0.15,24,27)
 #write.csv(simulation_results, "data/capacity-simulation/simulation-results.csv", row.names=FALSE)
 
 #plot the data
-capacity = capacity.simulation(par[[1]][[1]],par[[2]][[1]],par[[3]][[1]],par[[4]][[1]],par[[5]][[1]])[3]
-max_capacity = capacity.simulation(par[[1]][[1]],par[[2]][[1]],par[[3]][[1]],par[[4]][[1]],par[[5]][[1]])[4]
+
+capacity = capacity.simulation(n_stations,activity_per_station,initial_fill_percentage ,active_hours,docks_per_station)[3]
+max_capacity = capacity.simulation(n_stations,activity_per_station,initial_fill_percentage ,active_hours,docks_per_station)[4]
 
 
 
-plot(seq(0,length(capacity[[1]])-1),capacity[[1]], type = 'l', xlab="Journey Made In/Out Postcode", ylab="Bikes Docked in Postcode", ylim = c(0,600))
-print(max(capacity[[1]]))
+plot(seq(0,length(capacity[[1]])-1),capacity[[1]], type = 'l', xlab="Journey Made In/Out Postcode", ylab="Bikes Docked in Postcode", ylim = c(0,1800))
+print(max_capacity)
+lines(seq(0,length(capacity[[1]])-1),max_capacity[[1]], color = 'red')
+
 #lines(max_capacity, color = 'red')
 
 
