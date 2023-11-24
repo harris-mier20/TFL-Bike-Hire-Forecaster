@@ -1,62 +1,11 @@
 # Read the data from the CSV files and extract the station names
 data <- read.csv("data/daily-activity-by-postcode.csv")
-sim_parameters <- read.csv("data/capacity-simulation/simulation-parameters.csv")
-sim_results <- read.csv("data/capacity-simulation/simulation-results.csv")
 
 #load in the file that defines all the postcode region borders
 source("short-forecasting.R")
 
-#collect data on all stations including a calculation of the activity per station
-#for each postcode
-postcode_labels <- c("ec1","ec2","ec3","ec4","wc1","wc2")
-activity_means <-colMeans(data[3:8])
-activity_sd <- sapply(data[3:8], sd)
-activity_max <- numeric()
 
-#find the max value in each column
-for (i in 3:8){
-  activity_max = c(activity_max, max(data[[i]]))
-}
-
-#hard code the number of stations in each postcode and calculate the
-#ratio of activity to number of stations in each postcode
-n_stations <- c(29,23,9,14,29,23)
-activity_aps <- unlist(Map("/", activity_max, n_stations))
-activity_sd <- round(activity_sd, digits = 0)
-
-#round the data
-activity_means <- round(activity_means, digits = 0)
-activity_aps <- round(activity_aps, digits = 1)
-
-#create data frame with statistics on each station
-postcode_statistics <- data.frame("Postcode" = postcode_labels,
-                                  "Stations" = n_stations,
-                                  "Mean" = activity_means,
-                                  "sd" = activity_sd,
-                                  "max" = activity_max,
-                                  "Ratio"= activity_aps)
-
-#create empty list to fill with emojis and colours to describe data
-emojis <- list()
-colours <- list()
-
-#add emoji and colour information to describe the data - for rendering on the UI
-for (i in 1: length(postcode_statistics$Ratio)){
-  if (postcode_statistics$Ratio[i] >= 225){
-    emojis[i] <- "angry"
-    colours[i] <- "red"
-  } else if (postcode_statistics$Ratio[i] >= 200){
-    emojis[i] <- "disappointed"
-    colours[i] <- "orange"
-  } else {
-    emojis[i] <- "smile"
-    colours[i] <- "green"
-  }
-}
-
-#append the new info to the data frame
-postcode_statistics$Emoji <- emojis
-postcode_statistics$Colour <- colours
+### - Descriptive Analytics and Smoothing - ###
 
 #define function to smooth the data with exponential smoothing
 smooth_data <- function(data,alpha,starting_value){
@@ -129,6 +78,133 @@ smooth_ec4 <- smooth_data(raw_ec4, 0.1, 2000)
 ec4_data <- data.frame("Date" = dates,
                        "Raw" = raw_ec4,
                        "Smooth" = smooth_ec4)
+
+#collect data on all stations including a calculation of the activity per station
+#for each postcode
+postcode_labels <- c("ec1","ec2","ec3","ec4","wc1","wc2")
+activity_means <-colMeans(data[3:8])
+activity_sd <- sapply(data[3:8], sd)
+activity_max <- numeric()
+
+#find the max value in each column
+for (i in postcode_labels){
+  data_string = paste0("smooth_",i)
+  activity_max = c(activity_max, round(max(get(data_string)),digits=0))
+}
+
+#hard code the number of stations in each postcode and calculate the
+#ratio of activity to number of stations in each postcode
+n_stations <- c(29,23,9,14,29,23)
+activity_aps <- unlist(Map("/", activity_max, n_stations))
+activity_sd <- round(activity_sd, digits = 0)
+
+#round the data
+activity_means <- round(activity_means, digits = 0)
+activity_aps <- round(activity_aps, digits = 1)
+
+#create data frame with statistics on each station
+postcode_statistics <- data.frame("Postcode" = postcode_labels,
+                                  "Stations" = n_stations,
+                                  "Mean" = activity_means,
+                                  "sd" = activity_sd,
+                                  "max" = activity_max,
+                                  "Ratio"= activity_aps)
+
+#create empty list to fill with emojis and colours to describe data
+emojis <- list()
+colours <- list()
+
+#add emoji and colour information to describe the data - for rendering on the UI
+for (i in 1: length(postcode_statistics$Ratio)){
+  if (postcode_statistics$Ratio[i] >= 200){
+    emojis[i] <- "angry"
+    colours[i] <- "red"
+  } else if (postcode_statistics$Ratio[i] >= 125){
+    emojis[i] <- "disappointed"
+    colours[i] <- "orange"
+  } else {
+    emojis[i] <- "smile"
+    colours[i] <- "green"
+  }
+}
+
+#append the new info to the data frame
+postcode_statistics$Emoji <- emojis
+postcode_statistics$Colour <- colours
+
+
+
+### - Capacity Simulation of App - ###
+
+capacity.simulation <- function(n_stations,activity_per_station,initial_fill_percentage,active_hours,docks_per_station){
+  
+  #derive simulation parameters from variables
+  total_docks = n_stations*docks_per_station
+  initial_full_docks = round((initial_fill_percentage*total_docks), digits = 0)
+  daily_activity = n_stations*activity_per_station
+  
+  #create array that randomly represents the number of transactions that occur in
+  #each of the active hours of the day, most transactions will occur in hour 3 and hour 8
+  hourly <- abs(rnorm(active_hours))
+  hourly[3] <- max(abs(hourly))
+  hourly[8] <- max(abs(hourly))
+  hourly <- round(hourly / sum(hourly) * daily_activity)
+  
+  #create an array of 0s or 1s where each represents a user action
+  #(1) represents a user arriving at a station
+  #(-1) represents a user taking a bike from a station
+  #for central london, in earlier hours the the probability of a user arriving is higher
+  #in later hours the probability of a user leaving is higher
+  #transaction
+  
+  # set probability based on this https://www.tomtom.com/traffic-index/london-traffic/
+  proportion <- c(1.44,1.32,1.12,0.87,0.49,0.30,0.82,4.91,11.66,11.96,4.02,2.88,
+                  2.96,3.05,3.37,6.05,8.19,10.13,9.26,4.99,3.00,2.16,1.97,2.08)
+  
+  # probability based from chart 10 here https://assets.publishing.service.gov.uk/media/5b57023440f0b63391c87ff6/rail-passengers-crowding-2017.pdf
+  probability <- c(0.50,0.40,0.71,0.72,0.80,0.76,0.42,0.75,0.73,0.73,0.69,0.62,0.54,
+                   0.46,0.44,0.41,0.31,0.17,0.14,0.17,0.14,0.18,0.14,0.17)
+
+  activity=numeric()
+  
+  for (i in 1:active_hours){
+    hour_activity=numeric()
+    for (j in 1:((proportion[i]*daily_activity)%/%100)){
+      hourly[i] = 1
+      random_array <- sample(c(1, -1), size = hourly[i], replace = TRUE,
+                             prob = c(probability[i], 1 - probability[i]))
+      hour_activity=c(hour_activity,random_array)
+      hour_activity = sum(hour_activity)
+    }
+    activity=c(activity,hour_activity)
+  }
+  
+  #loop through the all the activity, add one to the capacity if a user brings in a bike,
+  #subtract one from the capacity if a bike is taken 
+  capacity=numeric()
+  capacity=c(capacity,initial_full_docks)
+  for (i in 1:length(activity)){
+    new_capacity = capacity[length(capacity)] + activity[i]
+    capacity=c(capacity,new_capacity)
+  }
+  
+  #create array to plot the maximum capacity
+  max_capacity = rep(total_docks, times = length(capacity))
+  
+  simulation_parameters = data.frame(
+    "NumberStations" = n_stations,
+    "ActivityPerStation" = activity_per_station,
+    "MaxCapacity" = total_docks
+  )
+  
+  simulation_results = data.frame(
+    "MaxCapacity" = max_capacity,
+    "Capacity" = capacity
+  )
+  
+  return(list(simulation_parameters,simulation_results,capacity,max_capacity))
+}
+
 
 
 ### - handle the long term forecasting of the app - ###
@@ -237,3 +313,53 @@ ec4.obs <- c(ec4.obs,pad)
 date.fc <- data$Date[start_date_index:end_date_index]
 date_pad <- as.character((get_dates_sequence(date.fc[length(date.fc)], ((length(wc1.model)-length(date.fc))+1)))[-1])
 date.fc <- append(date.fc,date_pad)
+
+
+### - Using the long term forecast to optimise the number of stations - ###
+max_station <- 120
+
+#define the loss function for Santader bike stations
+#Max capacity is x*150 where x is the number of stations in a postcode
+loss <- function(error){
+  
+  #the loss for not meeting demand is the number of sales lost, £1.65 each,
+  #we assume each new station increases the daily activity capacity by 150
+  #if the capacity exceeds the demand by the full capacity of a station, the loss is the cost of the station
+  #cost to build station is £197,000 found here https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
+  if (error>0){
+    loss <- error*1.65
+  } else if (error > -max_station) {
+    loss <- 0
+  } else if (error > -2*max_station){
+    loss <- 197000
+  } else if (error > -3*max_station){
+    loss <- 2*197000
+  } else {
+    loss <- (error/max_station)*197000
+  }
+  
+  #we take the absolute value of the loss
+  return (abs(loss))
+}
+
+#define variables to visualize the loss function
+error.x <- seq(-200,1000,1)
+loss.y <- sapply(error.x, loss)
+
+#function that finds the optimal number of stations for a given set of data
+find_optimal <- function(data){
+  
+  #function used to iterate and optimize the number of stations
+  total_loss <- function(n.stations){
+    error <- data - n.stations*max_station
+    loss <- sapply(error, loss)
+    return(sum(loss))
+  }
+  
+  #use optimization to find the number of stations with the lowest value
+  optimal <- optim(par = 10, fn = total_loss, method = "Brent", lower = 0, upper = 50)
+  return(round(optimal[1][[1]],digits=0))
+}
+
+  
+
