@@ -29,8 +29,9 @@ my_theme <- create_theme(
 # Create custom styles for specific text elements
 title_style <- "font-family: 'Hammersmith One', sans-serif; font-weight: 400; font-size:160%"
 header_style <- "font-family: 'Hammersmith One', sans-serif; font-size:130%; text-align: center; font-weight: 600;"
-text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%"
-bold_text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; font-weight: 600;"
+plot_style <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; text-align: center; font-weight: 600;"
+text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:100%"
+bold_text_style <- "font-family: 'Hammersmith One', sans-serif; font-size:100%; font-weight: 600;"
 text_body <- "font-family: 'Hammersmith One', sans-serif; font-size:115%; padding-left:5%; padding-right:5%"
 
 #header styling
@@ -79,8 +80,13 @@ ui <- dashboardPage(
       
       #this div presents descriptive information about each postcode
       div(
+        
+        #Title for descriptive analytics 
+        div(style = "height: 20px;"),
+        div("Past Demand Analytics", style = header_style),
+        
         #number of stations
-        div(style = "height: 30px;"),
+        div(style = "height: 25px;"),
         fluidRow(
           column(width=1),
           column(width=7, "Number of Docking Stations", style = text_style),
@@ -121,7 +127,7 @@ ui <- dashboardPage(
         
         #Title for first plot
         div(style = "height: 25px;"),
-        div("Recorded Daily Activity", style = header_style),
+        div("Recorded Daily Activity", style = plot_style),
         
         #make a plot of the overall data for each postcode
         #overlay the smoothed data
@@ -141,8 +147,12 @@ ui <- dashboardPage(
       
       #this div is for the simulation
       div(
+
+        #Title for simulation
+        div(style = "height: 20px;"),
+        div("Daily Capacity Simulation", style = header_style),
         #explanation text
-        div(style = "height: 30px;"),
+        div(style = "height: 25px;"),
         div("By running a stochastic simulation to emulate the variable probability of bikes
             entering and leaving a central london postcode throughout a working day, we can infer that if the
             daily activity per station exceedes roughly 280, the number of docked bikes will exceed
@@ -151,13 +161,10 @@ ui <- dashboardPage(
             an activity of 280 per station, while preventing overspending on new infrastructure.", style = text_body),
         
         #Title for simulation plot
-        div(style = "height: 35px;"),
-        div("Daily Capacity Simulation", style = header_style),
+        div(style = "height: 15PX;"),
+        div("Simulation Results", style = plot_style),
         
-        #slider to select daily activity
-        div(style = "height: 35px;"),
-        tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: red}")),
-        sliderInput("ActivitySlider", "Select Daily Activity", min = 100, max = 200, value = 150, width = "100%"),
+        
         
         #make a plot to present the simulation results, where docked bikes exceed capacity
         div(style = "height: 7px;"),
@@ -170,12 +177,22 @@ ui <- dashboardPage(
           column(width = 1)
         ),
         
+        #slider to select daily activity
+        div(style = "height: 25px;"),
+        tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: red}")),
+        sliderInput("ActivitySlider", "Select Daily Activity", min = 100, max = 200, value = 150, width = "100%"),
+        
         #end section with baseline
         div(style = "height: 30px;border-bottom: 2px solid white;"),
       id = "div2", style = "display:none;"),
       
       #this div is for short term forecasting
       div(
+        
+        #Title for forcasting 
+        div(style = "height: 20px;"),
+        div("Short Term Demand Forcast", style = header_style),
+        
         #explanation of forecasting
         div(style = "height: 30px;"),
         div("Now, given previous knowldge of trends in demand and weather data the demand can be forecasted for a following day.
@@ -239,8 +256,8 @@ ui <- dashboardPage(
         ),
         
         #Title for short forecast plot
-        div(style = "height: 35px;"),
-        div("1 Day Forecast", style = header_style),
+        div(style = "height: 20px;"),
+        div("1 Day Forecast", style = plot_style),
         
         #make a plot to present the simulation results, where docked bikes exceed capacity
         div(style = "height: 7px;"),
@@ -259,14 +276,19 @@ ui <- dashboardPage(
       
       #this div is for long term holt winter forecasting
       div(
+        
+        #Title for long terms forcasting 
+        div(style = "height: 20px;"),
+        div("Long Term Demand Forcast", style = header_style),
+        
         #explanation of long term forecasting
         div(style = "height: 30px;"),
         div("This type of forecast is only effective for short term forecasting as error accumilates rapidly.
             We use a Holt-Winters approach to make long term forecasts using trends in the data.", style = text_body),
         
         #Title for long forecast plot
-        div(style = "height: 35px;"),
-        div("Long Term Forecast", style = header_style),
+        div(style = "height: 20px;"),
+        div("Long Term Forecast", style = plot_style),
         
         #make a plot to present the simulation results, where docked bikes exceed capacity
         div(style = "height: 7px;"),
@@ -286,6 +308,10 @@ ui <- dashboardPage(
       #this div is for prescriptive analytics
       div(
         
+        #Title for prescriptive analytics 
+        div(style = "height: 20px;"),
+        div("Proposed Network Construction Strategy", style = header_style),
+        
         #explanation of long term forecasting
         div(style = "height: 30px;"),
         div("We define a loss function to optimise the number of stations built. If the demand exceeds the capacity
@@ -293,8 +319,8 @@ ui <- dashboardPage(
             of the cost to build a docking station that is not fully utalised.", style = text_body),
         
         #Title for Loss Function function
-        div(style = "height: 35px;"),
-        div("Lost Revenue", style = header_style),
+        div(style = "height: 25px;"),
+        div("Lost Revenue", style = plot_style),
         
         # make a plot of the error function showing it is worse to over predict stations.
         fluidRow(
@@ -311,9 +337,10 @@ ui <- dashboardPage(
             accordingly. Below shows how many stations should be built in this postcode by 2024 to minimise loss", style = text_body),
         
         #Title for Bar plot
-        div(style = "height: 35px;"),
-        div("How Many Stations Should be Built for 2024", style = header_style),
+        div(style = "height: 25px;"),
+        div("How Many Stations Should be Built for 2024", style = plot_style),
         
+        div(style = "height: 5px;"),
         # bar plot of need new stations
         fluidRow(
           column(width = 1),
@@ -585,6 +612,8 @@ server <- function(input, output, session) {
     HTML(paste0("<div style='text-align: center; font-size: 30px;
                 font-weight: bold;'>", paste0("Postcode: ",postcode_title()), "</div>"))
   })
+
+  
   
   #observe for changes and fill in the descriptive statistics using
   #the data from a data frame created in data-processing.R
