@@ -153,12 +153,11 @@ ui <- dashboardPage(
         div("Daily Capacity Simulation", style = header_style),
         #explanation text
         div(style = "height: 25px;"),
-        div("By running a stochastic simulation to emulate the variable probability of bikes
-            entering and leaving a central london postcode throughout a working day, we can infer that if the
-            daily activity per station exceedes roughly 280, the number of docked bikes will exceed
-            the network's capacity and the service will become ineffective, resulting in a loss in revenue.
-            We optimise the number of proposed new stations to minimise the loss when future demand exceeds
-            an activity of 280 per station, while preventing overspending on new infrastructure.", style = text_body),
+        div("Below is a stochastic simulation to emulate the variable probability
+            of bike entering and leaving a central london postcode throughout 
+            a working day.Here you are able to adjusting daily station 
+            activity levels of an invidual station to predict when docking
+            demand will exceed infrastructure capacity.", style = text_body),
         
         #Title for simulation plot
         div(style = "height: 15PX;"),
@@ -195,59 +194,66 @@ ui <- dashboardPage(
         
         #explanation of forecasting
         div(style = "height: 30px;"),
-        div("Now, given previous knowldge of trends in demand and weather data the demand can be forecasted for a following day.
-            This could be used, for instance, to estimate maintenence requirements for a following day. The model can be constructed
-            by weighting the following values accordingly.", style = text_body),
+        div("This is a short term forcast relying upon iformation from weather
+            data and demand up until today. We are able to provide acutrate 
+            next day demand predictions with a sub 4% error across all postcodes
+            ", style = text_body),
         
         #state model
         div(style = "height: 25px;"),
         fluidRow(
           column(width=1),
-          column(width=7, "Intercept", style = text_style),
-          column(width=3, uiOutput("intercept"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Demand 1 day ago", style = text_style),
+          column(width=7, "Demand for tomorrow", style = text_style),
           column(width=3, uiOutput("1day"), style = text_style)
         ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Demand 7 days ago", style = text_style),
-          column(width=3, uiOutput("7day"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Average demand last 7 days", style = text_style),
-          column(width=3, uiOutput("7dayav"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Average demand last 365 days", style = text_style),
-          column(width=3, uiOutput("365dayav"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Average Temperature on day (degC)", style = text_style),
-          column(width=3, uiOutput("temp"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Wind on day (mph)", style = text_style),
-          column(width=3, uiOutput("wind"), style = text_style)
-        ),
-        div(style = "height: 15px;"),
-        fluidRow(
-          column(width=1),
-          column(width=7, "Rainfall on day (mm)", style = text_style),
-          column(width=3, uiOutput("rain"), style = text_style)
-        ),
+        # div(style = "height: 25px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Intercept", style = text_style),
+        #   column(width=3, uiOutput("intercept"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Demand 1 day ago", style = text_style),
+        #   column(width=3, uiOutput("1day"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Demand 7 days ago", style = text_style),
+        #   column(width=3, uiOutput("7day"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Average demand last 7 days", style = text_style),
+        #   column(width=3, uiOutput("7dayav"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Average demand last 365 days", style = text_style),
+        #   column(width=3, uiOutput("365dayav"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Average Temperature on day (degC)", style = text_style),
+        #   column(width=3, uiOutput("temp"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Wind on day (mph)", style = text_style),
+        #   column(width=3, uiOutput("wind"), style = text_style)
+        # ),
+        # div(style = "height: 15px;"),
+        # fluidRow(
+        #   column(width=1),
+        #   column(width=7, "Rainfall on day (mm)", style = text_style),
+        #   column(width=3, uiOutput("rain"), style = text_style)
+        # ),
         div(style = "height: 25px;"),
         fluidRow(
           column(width=1),
@@ -283,8 +289,9 @@ ui <- dashboardPage(
         
         #explanation of long term forecasting
         div(style = "height: 30px;"),
-        div("This type of forecast is only effective for short term forecasting as error accumilates rapidly.
-            We use a Holt-Winters approach to make long term forecasts using trends in the data.", style = text_body),
+        div("In orde to make predictions over a longer period of time this model 
+            uses a Holt-Winters approach to make long term forecasts using 
+            trends in the data. Providing predictions up to 2 years in advance", style = text_body),
         
         #Title for long forecast plot
         div(style = "height: 20px;"),
@@ -314,9 +321,10 @@ ui <- dashboardPage(
         
         #explanation of long term forecasting
         div(style = "height: 30px;"),
-        div("We define a loss function to optimise the number of stations built. If the demand exceeds the capacity
-            £1.65 is lost for every sale that cannot be made. However, if the capacity exceeds demand the loss is a function
-            of the cost to build a docking station that is not fully utalised.", style = text_body),
+        div("To give clarity of our methods here is our defined loss function.
+            We acount for loss of £1.65 lost from every underprediction, when
+            overpprediction passes a threshold we assume the build to be a mistake
+            including the cost of cosntruction as a loss.", style = text_body),
         
         #Title for Loss Function function
         div(style = "height: 25px;"),
@@ -333,8 +341,10 @@ ui <- dashboardPage(
         ),
         
         div(style = "height: 30px;"),
-        div("As such, it is much better to fall short of the demand than exceed it. We optimise the number of stations
-            accordingly. Below shows how many stations should be built in this postcode by 2024 to minimise loss", style = text_body),
+        div("The mismatch in supply and demand will leed to loss in revenue. 
+            Our proposed station construction plan will minimise TFL's future loss,
+            while preventing overspending on new infrastructure.
+            Below our proposiution up to 2024", style = text_body),
         
         #Title for Bar plot
         div(style = "height: 25px;"),
