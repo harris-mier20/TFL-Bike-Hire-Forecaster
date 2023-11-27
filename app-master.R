@@ -62,16 +62,16 @@ ui <- dashboardPage(
         
         #explain what the daily activity is
         div(style = "height: 15px;"),
-        div("The 'Daily Activity' of a postcode is defined as the total number of journeys in or out of a bike station
+        div("The 'Daily Activity' or 'Daily Demand' of a postcode is defined as the total number of journeys in or out of a bike station
           within the postcode in a single day.", style = text_body),
         
         #tick list to select what info to show.
         div(checkboxGroupInput("selectVars", "Select what information to show",
-                           choices = c("Descriptive Analytics",
-                                       "Daily Postcode Capacity Simulation",
-                                       "Short Term Forecasting",
-                                       "Long Term Forecasting",
-                                       "How Many Stations Need To Be Built"),
+                           choices = c("Analysis of Previous Demand",
+                                       "Daily Capacity Simulation",
+                                       "Short Term Activity Forecast",
+                                       "Long Term Activity Forecast",
+                                       "Proposed Network Construction Strategy"),
                            selected = c("Descriptive Analytics")), style = "padding-left: 3%;"),
         
         #close off section with baseline
@@ -83,7 +83,7 @@ ui <- dashboardPage(
         
         #Title for descriptive analytics 
         div(style = "height: 20px;"),
-        div("Past Demand Analytics", style = header_style),
+        div("Analysis of Previous Demand", style = header_style),
         
         #number of stations
         div(style = "height: 25px;"),
@@ -113,7 +113,7 @@ ui <- dashboardPage(
         div(style = "height: 7px;"),
         fluidRow(
           column(width=1),
-          column(width=7, "Maximum Activity", style = text_style),
+          column(width=7, "Smoothed Maximum Activity", style = text_style),
           column(width=3, uiOutput("max"), style = text_style)
         ),
         
@@ -151,19 +151,18 @@ ui <- dashboardPage(
         #Title for simulation
         div(style = "height: 20px;"),
         div("Daily Capacity Simulation", style = header_style),
+        
         #explanation text
         div(style = "height: 25px;"),
         div("Below is a stochastic simulation to emulate the variable probability
             of bike entering and leaving a central london postcode throughout 
-            a working day.Here you are able to adjusting daily station 
-            activity levels of an invidual station to predict when docking
+            a working day. Here you are able to adjust the daily 
+            activity per station in the postcode to determine when docking
             demand will exceed infrastructure capacity.", style = text_body),
         
         #Title for simulation plot
         div(style = "height: 15PX;"),
         div("Simulation Results", style = plot_style),
-        
-        
         
         #make a plot to present the simulation results, where docked bikes exceed capacity
         div(style = "height: 7px;"),
@@ -179,7 +178,7 @@ ui <- dashboardPage(
         #slider to select daily activity
         div(style = "height: 25px;"),
         tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: red}")),
-        sliderInput("ActivitySlider", "Select Daily Activity", min = 100, max = 200, value = 150, width = "100%"),
+        sliderInput("ActivitySlider", "Select Daily Activity", min = 65, max = 165, value = 115, width = "100%"),
         
         #end section with baseline
         div(style = "height: 30px;border-bottom: 2px solid white;"),
@@ -190,70 +189,40 @@ ui <- dashboardPage(
         
         #Title for forcasting 
         div(style = "height: 20px;"),
-        div("Short Term Demand Forcast", style = header_style),
+        div("Short Term Activity Forecast", style = header_style),
         
         #explanation of forecasting
         div(style = "height: 30px;"),
-        div("This is a short term forcast relying upon iformation from weather
-            data and demand up until today. We are able to provide acutrate 
-            next day demand predictions with a sub 4% error across all postcodes
+        div("This is a short term forecast that uses weather data and activity up to a given day. We are able to provide accurate 
+            predictions the activity on a following day with less than 4% error across all postcodes. The following are the most important
+            features and their coefficients.
             ", style = text_body),
         
-        #state model
+        #model features
         div(style = "height: 25px;"),
         fluidRow(
           column(width=1),
-          column(width=7, "Demand for tomorrow", style = text_style),
+          column(width=7, "Demand on Previous Day", style = text_style),
           column(width=3, uiOutput("1day"), style = text_style)
         ),
-        # div(style = "height: 25px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Intercept", style = text_style),
-        #   column(width=3, uiOutput("intercept"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Demand 1 day ago", style = text_style),
-        #   column(width=3, uiOutput("1day"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Demand 7 days ago", style = text_style),
-        #   column(width=3, uiOutput("7day"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Average demand last 7 days", style = text_style),
-        #   column(width=3, uiOutput("7dayav"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Average demand last 365 days", style = text_style),
-        #   column(width=3, uiOutput("365dayav"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Average Temperature on day (degC)", style = text_style),
-        #   column(width=3, uiOutput("temp"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Wind on day (mph)", style = text_style),
-        #   column(width=3, uiOutput("wind"), style = text_style)
-        # ),
-        # div(style = "height: 15px;"),
-        # fluidRow(
-        #   column(width=1),
-        #   column(width=7, "Rainfall on day (mm)", style = text_style),
-        #   column(width=3, uiOutput("rain"), style = text_style)
-        # ),
+        div(style = "height: 15px;"),
+        fluidRow(
+          column(width=1),
+          column(width=7, "Average Temperature on day (degC)", style = text_style),
+          column(width=3, uiOutput("temp"), style = text_style)
+        ),
+        div(style = "height: 15px;"),
+        fluidRow(
+          column(width=1),
+          column(width=7, "Wind on day (mph)", style = text_style),
+          column(width=3, uiOutput("wind"), style = text_style)
+        ),
+        div(style = "height: 15px;"),
+        fluidRow(
+          column(width=1),
+          column(width=7, "Rainfall on day (mm)", style = text_style),
+          column(width=3, uiOutput("rain"), style = text_style)
+        ),
         div(style = "height: 25px;"),
         fluidRow(
           column(width=1),
@@ -263,7 +232,7 @@ ui <- dashboardPage(
         
         #Title for short forecast plot
         div(style = "height: 20px;"),
-        div("1 Day Forecast", style = plot_style),
+        div("Next Day Forecast", style = plot_style),
         
         #make a plot to present the simulation results, where docked bikes exceed capacity
         div(style = "height: 7px;"),
@@ -283,15 +252,14 @@ ui <- dashboardPage(
       #this div is for long term holt winter forecasting
       div(
         
-        #Title for long terms forcasting 
+        #Title for long terms forecasting 
         div(style = "height: 20px;"),
-        div("Long Term Demand Forcast", style = header_style),
+        div("Long Term Activity Forecast", style = header_style),
         
         #explanation of long term forecasting
         div(style = "height: 30px;"),
-        div("In orde to make predictions over a longer period of time this model 
-            uses a Holt-Winters approach to make long term forecasts using 
-            trends in the data. Providing predictions up to 2 years in advance", style = text_body),
+        div("In order to make stable predictions further into the future, we use a Holt-Winters model
+            that follows seasonal trends in the data.", style = text_body),
         
         #Title for long forecast plot
         div(style = "height: 20px;"),
@@ -321,34 +289,24 @@ ui <- dashboardPage(
         
         #explanation of long term forecasting
         div(style = "height: 30px;"),
-        div("To give clarity of our methods here is our defined loss function.
-            We acount for loss of £1.65 lost from every underprediction, when
-            overpprediction passes a threshold we assume the build to be a mistake
-            including the cost of cosntruction as a loss.", style = text_body),
+        div("We have defined a loss function to optimise the number of stations in each postcode, minimising lost revenue for TFL.
+            We acount for loss of £1.65 for each demanded journey that exceeds the capacity of the system, assuming the capaciy of the postcode is 
+            the maximum daily activity per station, defined in the simulation above, multiplied by the number of stations.", style = text_body),
+        div(style = "height: 10px;"),
+        div("On the other hand, when capacity exceeds demand by the maximum daily activity per station, the £197,000 to build the additional station is wasted and can
+            be considered lost revenue.", style = text_body),
+        div(style = "height: 10px;"),
+        div("Adjust the maximum daily activity per station to determine how many new stations should be built in each postcode for 2024. The simulation above
+            identifies an activity of 150 to be a suitable maximum.", style = text_body),
         
-        #Title for Loss Function function
+        #slider to select daily activity
         div(style = "height: 25px;"),
-        div("Lost Revenue", style = plot_style),
-        
-        # make a plot of the error function showing it is worse to over predict stations.
-        fluidRow(
-          column(width = 1),
-          column(
-            width = 10, div(style = "border-radius: 15px; height: 280px; overflow: hidden;",
-                            plotOutput("Lossfunction"))
-          ),
-          column(width = 1)
-        ),
-        
-        div(style = "height: 30px;"),
-        div("The mismatch in supply and demand will leed to loss in revenue. 
-            Our proposed station construction plan will minimise TFL's future loss,
-            while preventing overspending on new infrastructure.
-            Below our proposiution up to 2024", style = text_body),
+        tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: red}")),
+        sliderInput("ActivitySlider2", "Select Daily Activity", min = 65, max = 165, value = 115, width = "100%"),
         
         #Title for Bar plot
         div(style = "height: 25px;"),
-        div("How Many Stations Should be Built for 2024", style = plot_style),
+        div("How Many Stations Should be Built in Each Postcode", style = plot_style),
         
         div(style = "height: 5px;"),
         # bar plot of need new stations
@@ -360,6 +318,18 @@ ui <- dashboardPage(
           ),
           column(width = 1)
         ),
+        
+        #add section with slider to adjust the number of stations, returning the loss in pounds over 2024
+        #slider to select daily activity
+        div(style = "height: 25px;"),
+        fluidRow(
+          column(width = 7, 
+                 tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: red}")),
+                 sliderInput("nstations", "Select Number of New Stations", min = 0, max = 15, value = 3, width = "100%")),
+          column(
+            width = 3, "Test")
+          ),
+        
         
         #close off section with baseline
         div(style = "height: 30px;border-bottom: 2px solid white;"),
@@ -410,13 +380,10 @@ server <- function(input, output, session) {
   # Define the modal to display information about the app.
   showModal(
     modalDialog(
-      title = "Welcome to the TFL Bike Hire Demand Forecast", "Transport for London (TFL) must proactively expand the santander bike docking station infrastructure.
-          By analysing current demand patterns and projecting future growth in demand, we can
-          advice TFL on strategic station expansion plans, to ensure that the
-          demanded daily activity (the number of journeys in or out of a postcode per day)
-          does not exceed the network's capacity This will help TFL remain as profitable as
-          possible by maximising their daily number of riders, without overspending. Cick a postcode region
-          on the map for more information.",
+      title = "How Many New Docking Stations are Needed in Central London for 2024?", "TFL must proactively expand the Santander bike docking
+      station infrastructure in central London. To maximise profit, TFL must minimise the lost revenue from not meeting the growth in
+      future demand, while not over spending on unecessary infrastructure. Cick postcode regions on the map to view specific details and forecasts and
+      an interactive recommendation of how many stations should be built",
       footer = actionButton("modalOkBtn", "OK")
     )
   )
@@ -428,11 +395,11 @@ server <- function(input, output, session) {
   
   #hide and show divs when user selects what information to see
   observe({
-    shinyjs::toggle(id = "div1", condition = "Descriptive Analytics" %in% input$selectVars)
-    shinyjs::toggle(id = "div2", condition = "Daily Postcode Capacity Simulation" %in% input$selectVars)
-    shinyjs::toggle(id = "div3", condition = "Short Term Forecasting" %in% input$selectVars)
-    shinyjs::toggle(id = "div4", condition = "Long Term Forecasting" %in% input$selectVars)
-    shinyjs::toggle(id = "div5", condition = "How Many Stations Need To Be Built" %in% input$selectVars)
+    shinyjs::toggle(id = "div1", condition = "Analysis of Previous Demand" %in% input$selectVars)
+    shinyjs::toggle(id = "div2", condition = "Daily Capacity Simulation" %in% input$selectVars)
+    shinyjs::toggle(id = "div3", condition = "Short Term Activity Forecast" %in% input$selectVars)
+    shinyjs::toggle(id = "div4", condition = "Long Term Activity Forecast" %in% input$selectVars)
+    shinyjs::toggle(id = "div5", condition = "Proposed Network Construction Strategy" %in% input$selectVars)
   })
   
   # Initialize a reactiveValues object to store the selected postcode
@@ -441,6 +408,11 @@ server <- function(input, output, session) {
   # Initialize a reactiveValues object to store the selected daily activity from the slider
   selected_activity <- reactive({
     input$ActivitySlider
+  })
+  
+  # Initialize a reactiveValues object to store the selected daily activity from the second slider
+  selected_activity_2 <- reactive({
+    input$ActivitySlider2
   })
   
   #render the logo in the overlay imageOutput() element
@@ -765,45 +737,42 @@ server <- function(input, output, session) {
       
     })
     
-    output$Lossfunction <- renderPlot({
-      par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
-      
-      #plot the raw data in a light plot
-      plot(error.x, loss.y, type = "l", lwd = 3, col = "red", xlab = "", ylab = "", xlim = c(-200, 1000), xaxt = "n")
-      
-      #define the axis formatting
-      values_to_show <- seq(-200, 1000, 10)
-      axis(1, at = values_to_show, col.axis = "white") 
-      axis(2, col.axis = "white")
-      mtext(text = "Revenue Lost / £", side = 2, line = 3, col = "white", cex = 1.25)
-      mtext(text = "Daily Demand - Max. Capacity", side = 1, line = 3, col = "white", cex = 1.5)
-      
-    })
     
     output$NewStations <- renderPlot({
       par(mar=c(13,5,1.5,1), bg = "#636363", bty = "n")
       
       # Example data
       categories <- c("EC1","EC2","EC3","EC4","WC1","WC2")
-      values <- c(find_optimal(ec1.model[1000:length(ec1.model)])-n_stations[1],
-                  find_optimal(ec2.model[1000:length(ec2.model)])-n_stations[2],
-                  find_optimal(ec3.model[1000:length(ec3.model)])-n_stations[3],
-                  find_optimal(ec4.model[1000:length(ec4.model)])-n_stations[4],
-                  find_optimal(wc1.model[1000:length(wc1.model)])-n_stations[5],
-                  find_optimal(wc2.model[1000:length(wc2.model)])-n_stations[6]
+      values <- c(find_optimal(ec1.model[1000:length(ec1.model)],selected_activity_2())-n_stations[1],
+                  find_optimal(ec2.model[1000:length(ec2.model)],selected_activity_2())-n_stations[2],
+                  find_optimal(ec3.model[1000:length(ec3.model)],selected_activity_2())-n_stations[3],
+                  find_optimal(ec4.model[1000:length(ec4.model)],selected_activity_2())-n_stations[4],
+                  find_optimal(wc1.model[1000:length(wc1.model)],selected_activity_2())-n_stations[5],
+                  find_optimal(wc2.model[1000:length(wc2.model)],selected_activity_2())-n_stations[6]
                   )
+      
+      
       
       #use the postcode labels to find the right bar to highlight for the current postcode
       highlighted_bar <- which(postcode_labels == rv$postcode)
       
       #create a barplot
-      barplot(values, col = ifelse(seq_along(categories) == highlighted_bar, "red", "#828282"), xlab ="", ylab = "", border = "NA", col.axis = "white", xaxt = "n")
+      barplot(values, ylim = c(0, 30), col = ifelse(seq_along(categories) == highlighted_bar, "red", "#828282"), xlab ="", ylab = "", border = "NA", col.axis = "white", xaxt = "n")
       
       #manually define the axis labels for the available data
       values_to_show <- seq(0.75, 6.75, length.out = 6)
       axis(1, at = values_to_show, labels = c("EC1","EC2","EC3","EC4","WC1","WC2"), col.axis = "white")  # Set white axis color
       axis(2, col.axis = "white")
       mtext(text = "Needed Stations", side = 2, line = 3, col = "white", cex = 1.5)
+      
+      #update the slider to display the current optimal solution
+      # Initialize a reactiveValues object to store the selected daily activity from the second slider
+      
+      n_stations <- values[highlighted_bar]
+      updateSliderInput(session, "nstations", value = n_stations)
+      model = get(paste0(rv$postcode,".model"))
+      total_loss = loss_n_station(model[1000:length(model)],n_stations+20,selected_activity_2())
+      print(total_loss)
       
       
     })

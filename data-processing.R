@@ -162,7 +162,7 @@ capacity.simulation <- function(n_stations,activity_per_station,initial_fill_per
                   2.96,3.05,3.37,6.05,8.19,10.13,9.26,4.99,3.00,2.16,1.97,2.08)
   
   # probability based from chart 10 here https://assets.publishing.service.gov.uk/media/5b57023440f0b63391c87ff6/rail-passengers-crowding-2017.pdf
-  probability <- c(0.50,0.40,0.71,0.72,0.80,0.76,0.42,0.75,0.73,0.73,0.69,0.62,0.54,
+  probability <- c(0.50,0.50,0.71,0.82,0.82,0.73,0.42,0.85,0.84,0.78,0.68,0.66,0.54,
                    0.46,0.44,0.41,0.31,0.17,0.14,0.17,0.14,0.18,0.14,0.17)
 
   activity=numeric()
@@ -316,42 +316,37 @@ date.fc <- append(date.fc,date_pad)
 
 
 ### - Using the long term forecast to optimise the number of stations - ###
-max_station <- 120
-
-#define the loss function for Santader bike stations
-#Max capacity is x*150 where x is the number of stations in a postcode
-loss <- function(error){
-  
-  #the loss for not meeting demand is the number of sales lost, £1.65 each,
-  #we assume each new station increases the daily activity capacity by 150
-  #if the capacity exceeds the demand by the full capacity of a station, the loss is the cost of the station
-  #cost to build station is £197,000 found here https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
-  if (error>0){
-    loss <- error*1.65
-  } else if (error > -max_station) {
-    loss <- 0
-  } else if (error > -2*max_station){
-    loss <- 197000
-  } else if (error > -3*max_station){
-    loss <- 2*197000
-  } else {
-    loss <- (error/max_station)*197000
-  }
-  
-  #we take the absolute value of the loss
-  return (abs(loss))
-}
-
-#define variables to visualize the loss function
-error.x <- seq(-200,1000,1)
-loss.y <- sapply(error.x, loss)
 
 #function that finds the optimal number of stations for a given set of data
-find_optimal <- function(data){
+find_optimal <- function(data,max.station){
+  
+  #define the loss function for Santader bike stations
+  #Max capacity is x*150 where x is the number of stations in a postcode
+  loss <- function(error){
+    
+    #the loss for not meeting demand is the number of sales lost, £1.65 each,
+    #we assume each new station increases the daily activity capacity by 150
+    #if the capacity exceeds the demand by the full capacity of a station, the loss is the cost of the station
+    #cost to build station is £197,000 found here https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
+    if (error>0){
+      loss <- error*1.65
+    } else if (error > -max.station) {
+      loss <- 0
+    } else if (error > -2*max.station){
+      loss <- 197000
+    } else if (error > -3*max.station){
+      loss <- 2*197000
+    } else {
+      loss <- (error/max.station)*197000
+    }
+    
+    #we take the absolute value of the loss
+    return (abs(loss))
+  }
   
   #function used to iterate and optimize the number of stations
   total_loss <- function(n.stations){
-    error <- data - n.stations*max_station
+    error <- data - n.stations*max.station
     loss <- sapply(error, loss)
     return(sum(loss))
   }
@@ -359,6 +354,33 @@ find_optimal <- function(data){
   #use optimization to find the number of stations with the lowest value
   optimal <- optim(par = 10, fn = total_loss, method = "Brent", lower = 0, upper = 50)
   return(round(optimal[1][[1]],digits=0))
+}
+
+#repeat function but return loss when number of stations is not optimal
+loss_n_station <- function(data, n.stations, max.station){
+  
+  loss <- function(error){
+    if (error>0){
+      loss <- error*1.65
+    } else if (error > -max.station) {
+      loss <- 0
+    } else if (error > -2*max.station){
+      loss <- 197000
+    } else if (error > -3*max.station){
+      loss <- 2*197000
+    } else {
+      loss <- (error/max.station)*197000
+    }
+    return (abs(loss))
+  }
+  
+  total_loss <- function(n.stations){
+    error <- data - n.stations*max.station
+    loss <- sapply(error, loss)
+    return(sum(loss))
+  }
+  
+  return (total_loss(n.stations))
 }
 
   
