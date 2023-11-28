@@ -293,8 +293,8 @@ ui <- dashboardPage(
             We acount for loss of £1.65 for each demanded journey that exceeds the capacity of the system, assuming the capaciy of the postcode is 
             the maximum daily activity per station, defined in the simulation above, multiplied by the number of stations.", style = text_body),
         div(style = "height: 10px;"),
-        div("On the other hand, when capacity exceeds demand by the maximum daily activity per station, the £197,000 to build the additional station is wasted and can
-            be considered lost revenue.", style = text_body),
+        div("On the other hand, when capacity exceeds demand by the maximum daily activity per station, we assume that a proportion of the daily cost of a station,
+            ", style = text_body),
         div(style = "height: 10px;"),
         div("Adjust the maximum daily activity per station to determine how many new stations should be built in each postcode for 2024. The simulation above
             identifies an activity of 150 to be a suitable maximum.", style = text_body),
@@ -306,7 +306,7 @@ ui <- dashboardPage(
         
         #Title for Bar plot
         div(style = "height: 25px;"),
-        div("How Many Stations Should be Built in Each Postcode", style = plot_style),
+        div("How Many Stations Should be Built", style = plot_style),
         
         div(style = "height: 5px;"),
         # bar plot of need new stations
@@ -323,11 +323,12 @@ ui <- dashboardPage(
         #slider to select daily activity
         div(style = "height: 25px;"),
         fluidRow(
-          column(width = 7, 
+          column(width = 7, div("New Stations Built", style = header_style),
                  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: red}")),
-                 sliderInput("nstations", "Select Number of New Stations", min = 0, max = 15, value = 3, width = "100%")),
-          column(
-            width = 3, "Test")
+                 sliderInput("nstations",label = "", min = 0, max = 15, value = 3, width = "100%")),
+                
+          column(width = 3, div("Lost Revenue", style = header_style),
+                 textOutput("LostRevenue"), style = header_style)
           ),
         
         
@@ -403,7 +404,10 @@ server <- function(input, output, session) {
   })
   
   # Initialize a reactiveValues object to store the selected postcode
-  rv <- reactiveValues(postcode = "wc1")
+  rv <- reactiveValues(
+    postcode = "wc1",
+    new_stations = 6
+    )
   
   # Initialize a reactiveValues object to store the selected daily activity from the slider
   selected_activity <- reactive({
@@ -595,10 +599,7 @@ server <- function(input, output, session) {
                 font-weight: bold;'>", paste0("Postcode: ",postcode_title()), "</div>"))
   })
 
-  
-  
-  #observe for changes and fill in the descriptive statistics using
-  #the data from a data frame created in data-processing.R
+  #observe for changes and update the side panel
   observe({
     
     #search for the values from the data based on the input
@@ -751,8 +752,6 @@ server <- function(input, output, session) {
                   find_optimal(wc2.model[1000:length(wc2.model)],selected_activity_2())-n_stations[6]
                   )
       
-      
-      
       #use the postcode labels to find the right bar to highlight for the current postcode
       highlighted_bar <- which(postcode_labels == rv$postcode)
       
@@ -765,20 +764,25 @@ server <- function(input, output, session) {
       axis(2, col.axis = "white")
       mtext(text = "Needed Stations", side = 2, line = 3, col = "white", cex = 1.5)
       
-      #update the slider to display the current optimal solution
-      # Initialize a reactiveValues object to store the selected daily activity from the second slider
-      
-      n_stations <- values[highlighted_bar]
-      updateSliderInput(session, "nstations", value = n_stations)
-      model = get(paste0(rv$postcode,".model"))
-      total_loss = loss_n_station(model[1000:length(model)],n_stations+20,selected_activity_2())
-      print(total_loss)
-      
+      rv$new_stations <- values[highlighted_bar]
       
     })
-    
   })
   
+  observeEvent(rv$new_stations,{
+    updateSliderInput(session, "nstations", value = rv$new_stations)
+  })
+  
+  #find the loss when a sub optimal number of stations is selected
+  output$LostRevenue <- renderText({
+    input_stations <- input$nstations
+    current_stations <- n_stations[which(postcode_labels == rv$postcode)]
+    model <- get(paste0(rv$postcode,".model"))
+    return_loss <- loss_n_station(model[1000:length(model)],input_stations+current_stations,selected_activity_2())
+    
+    return(as.character(return_loss))
+  })
+
 }
 
 # Launch the app

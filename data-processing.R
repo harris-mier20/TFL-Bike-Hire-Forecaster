@@ -323,24 +323,11 @@ find_optimal <- function(data,max.station){
   #define the loss function for Santader bike stations
   #Max capacity is x*150 where x is the number of stations in a postcode
   loss <- function(error){
-    
-    #the loss for not meeting demand is the number of sales lost, £1.65 each,
-    #we assume each new station increases the daily activity capacity by 150
-    #if the capacity exceeds the demand by the full capacity of a station, the loss is the cost of the station
-    #cost to build station is £197,000 found here https://content.tfl.gov.uk/developer-guidance-for-santander-cycles.pdf
     if (error>0){
       loss <- error*1.65
-    } else if (error > -max.station) {
-      loss <- 0
-    } else if (error > -2*max.station){
-      loss <- 197000
-    } else if (error > -3*max.station){
-      loss <- 2*197000
     } else {
-      loss <- (error/max.station)*197000
+      loss <- error*4.78
     }
-    
-    #we take the absolute value of the loss
     return (abs(loss))
   }
   
@@ -362,14 +349,8 @@ loss_n_station <- function(data, n.stations, max.station){
   loss <- function(error){
     if (error>0){
       loss <- error*1.65
-    } else if (error > -max.station) {
-      loss <- 0
-    } else if (error > -2*max.station){
-      loss <- 197000
-    } else if (error > -3*max.station){
-      loss <- 2*197000
     } else {
-      loss <- (error/max.station)*197000
+      loss <- error*4.78
     }
     return (abs(loss))
   }
@@ -383,5 +364,4 @@ loss_n_station <- function(data, n.stations, max.station){
   return (total_loss(n.stations))
 }
 
-  
 
