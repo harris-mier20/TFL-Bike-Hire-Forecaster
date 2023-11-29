@@ -1,3 +1,4 @@
+#install libraries to process data
 library(lubridate)
 library(data.table)
 library(dplyr)
@@ -139,6 +140,7 @@ olddataformatextraction <- function(startinglink){
   # the data formatted at file with the id 246 has a repeated id
   # meaning that every datpoint after has to be pulled back an id
   lock <- 246
+  
   #generates a list fo csv urls between the string link and link 335
   for (n in startnum:335) {
     csvlist <- append(csvlist, holdlink, after = length(csvlist))
@@ -209,4 +211,4 @@ olddata <- olddataformatextraction("https://cycling.data.tfl.gov.uk/usage-stats/
 Finalset <- rbind(olddata,newdata)
 
 # output as one csv
-write.csv(Finalset, file = "C:/Imperial/WC_data.csv")
+write.csv(Finalset, file = "data/WC_data.csv")

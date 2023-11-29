@@ -1,4 +1,5 @@
 #load in all the available feature data for training the model
+#this data was created in short-forecasting-data.R
 wc1 <- read.csv("data/feature-data/WC1-feature-data.CSV")
 wc2 <- read.csv("data/feature-data/WC2-feature-data.CSV")
 ec1 <- read.csv("data/feature-data/EC1-feature-data.CSV")
@@ -7,7 +8,7 @@ ec3 <- read.csv("data/feature-data/EC3-feature-data.CSV")
 ec4 <- read.csv("data/feature-data/EC4-feature-data.CSV")
 weatherdata <- read.csv("data/weather-data.csv")
 
-#split the data for training, validation and testing
+#split the data for each postcode for training, validation and testing
 wc1.train <- wc1[1:423,]
 wc1.valid <- wc1[500:564,]
 wc1.test <- wc1[565:705,]
@@ -32,7 +33,7 @@ ec4.train <- ec4[1:423,]
 ec4.valid <- ec4[500:564,]
 ec4.test <- ec4[565:705,]
 
-#function that takes training data and validation data as arguments and list of features
+#create function that takes training data and validation data as arguments and list of features
 #fits a regression model and return the rmse
 fit_model <- function(train,valid,features){
   
@@ -51,7 +52,8 @@ fit_model <- function(train,valid,features){
 }
 
 #to prevent over-fitting, a function that takes in regression model parameters and removes features that
-#have a coefficients with parameters less than a curtain magnitude
+#have a coefficients with parameters less than a curtain magnitude. This is very basic feature selection
+#marginal contribution is not considered for the sake of simplicity in the prototype
 feature_selection <- function(model){
   
   #create empty list of features
@@ -96,11 +98,14 @@ selected_features <- feature_selection(model)
 #"Wind",
 #"Raincover"
 
-#use the selected features to create a model on the test data and plot it against the data itself.
+#use the selected features to train a model using the test and validation data
+#then run the model on the test data and plot it against the data itself.
+
 #start by defining the selected features for the model
 formula_string <- paste("Daydemand ~", paste(selected_features, collapse = " + "))
 
-#create the model for wc1
+#create the model for wc1, store these in variables that can be accessed in the app
+#this file is called into the data-processing.R file, which is then called in by the app
 wc1.fc <- lm(formula_string, rbind(wc1.train,wc1.valid))
 wc1.predict <- predict(wc1.fc, wc1.test)
 wc1.err <- wc1.test$Daydemand - wc1.predict

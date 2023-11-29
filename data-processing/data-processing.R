@@ -1,8 +1,8 @@
-# Read the data from the CSV files and extract the station names
+# Read the data from the CSV file that has data on each postcode
 data <- read.csv("data/daily-activity-by-postcode.csv")
 
-#load in the file that defines all the postcode region borders
-source("short-forecasting.R")
+#load in the file that handles the short forecasting with linear regression
+source("data-processing/short-forecasting.R")
 
 
 ### - Descriptive Analytics and Smoothing - ###
@@ -136,9 +136,10 @@ postcode_statistics$Colour <- colours
 
 ### - Capacity Simulation of App - ###
 
+#create a function simulates the daily capacity of the postcode given system parameters
 capacity.simulation <- function(n_stations,activity_per_station,initial_fill_percentage,active_hours,docks_per_station){
   
-  #derive simulation parameters from variables
+  #derive simulation parameters from input variables
   total_docks = n_stations*docks_per_station
   initial_full_docks = round((initial_fill_percentage*total_docks), digits = 0)
   daily_activity = n_stations*activity_per_station
@@ -150,39 +151,53 @@ capacity.simulation <- function(n_stations,activity_per_station,initial_fill_per
   hourly[8] <- max(abs(hourly))
   hourly <- round(hourly / sum(hourly) * daily_activity)
   
-  #create an array of 0s or 1s where each represents a user action
+  #create an array of (-1)s or (1)s where each represents a user action
   #(1) represents a user arriving at a station
   #(-1) represents a user taking a bike from a station
   #for central london, in earlier hours the the probability of a user arriving is higher
-  #in later hours the probability of a user leaving is higher
-  #transaction
+  #in later hours the probability of a user leaving is higher transaction
   
-  # set probability based on this https://www.tomtom.com/traffic-index/london-traffic/
+  # set proportion of journeys into the postcode based on traffic data https://www.tomtom.com/traffic-index/london-traffic/
   proportion <- c(1.44,1.32,1.12,0.87,0.49,0.30,0.82,4.91,11.66,11.96,4.02,2.88,
                   2.96,3.05,3.37,6.05,8.19,10.13,9.26,4.99,3.00,2.16,1.97,2.08)
   
-  # probability based from chart 10 here https://assets.publishing.service.gov.uk/media/5b57023440f0b63391c87ff6/rail-passengers-crowding-2017.pdf
+  # set probability of action being an arrival based on data here https://assets.publishing.service.gov.uk/media/5b57023440f0b63391c87ff6/rail-passengers-crowding-2017.pdf
   probability <- c(0.50,0.50,0.71,0.82,0.82,0.73,0.42,0.85,0.84,0.78,0.68,0.66,0.54,
                    0.46,0.44,0.41,0.31,0.17,0.14,0.17,0.14,0.18,0.14,0.17)
-
+  
+  #create an empty list to fill with the simulated activity
   activity=numeric()
   
+  #loop through the active hours of the day
   for (i in 1:active_hours){
+    
+    #create an empty list to store all the actions that occur probalistically in each hour
     hour_activity=numeric()
+    
+    #within each hour, create a loop that repeats for every journey that is made in that hour
+    #defined by the proportions above
     for (j in 1:((proportion[i]*daily_activity)%/%100)){
+      
+      #take a random sample of 1 or -1 for each action based on the probability above
       hourly[i] = 1
       random_array <- sample(c(1, -1), size = hourly[i], replace = TRUE,
                              prob = c(probability[i], 1 - probability[i]))
+      
+      #add 1 or subtract 1 from the number of bikes in the postcode in this hour
+      #depending on if it is a 1 or a -1 (arrive or leave)
       hour_activity=c(hour_activity,random_array)
       hour_activity = sum(hour_activity)
     }
+    
+    #append the number of bikes in the postcode in this hour
     activity=c(activity,hour_activity)
   }
   
-  #loop through the all the activity, add one to the capacity if a user brings in a bike,
-  #subtract one from the capacity if a bike is taken 
+  #create new lists to determine how many bikes are in the postcode at any one time
   capacity=numeric()
   capacity=c(capacity,initial_full_docks)
+  
+  #loop through the all the hours do cumulative addition to find the total number of bikes in the postcode at any one time
   for (i in 1:length(activity)){
     new_capacity = capacity[length(capacity)] + activity[i]
     capacity=c(capacity,new_capacity)
@@ -191,25 +206,28 @@ capacity.simulation <- function(n_stations,activity_per_station,initial_fill_per
   #create array to plot the maximum capacity
   max_capacity = rep(total_docks, times = length(capacity))
   
+  #create a data frame to return teh system parameters back if they need to be referenced
   simulation_parameters = data.frame(
     "NumberStations" = n_stations,
     "ActivityPerStation" = activity_per_station,
     "MaxCapacity" = total_docks
   )
   
+  #create a data frame to return the results
   simulation_results = data.frame(
     "MaxCapacity" = max_capacity,
     "Capacity" = capacity
   )
   
+  #return the result
   return(list(simulation_parameters,simulation_results,capacity,max_capacity))
 }
 
 
 
-### - handle the long term forecasting of the app - ###
+### - Long term Holt Winters forecasting of the app - ###
 
-#create function that interpolates data to restore the full length of data points from a string
+#create function that interpolates data to restore the full length of data points from an array that has been compressed
 interpolate_data <- function(original_data, new_length) {
   original_length <- length(original_data)
   
@@ -225,10 +243,10 @@ interpolate_data <- function(original_data, new_length) {
   return(interpolated_data)
 }
 
-#function that takes data and completes Holt Winter forecasting
+#function that takes data and completes Holt Winter forecasting over a compressed array
 holtwinter <- function(data){
   
-  #define model parameters
+  #define model parameters for Holt winters coefficients
   m  <- 28
   aa <- 0.5
   bb <- 0.1
@@ -240,11 +258,11 @@ holtwinter <- function(data){
   fc <- 60
   cut <- 50
   
-  #reduce the data down for the model
+  #reduce the data down to make processing easier for the model
   reduced <- data[seq(1, length(data), length.out = cut)]
   yt <- reduced
   
-  #complete holts winter smoothing
+  #complete holts winter smoothing from discrete time equations
   for (i in 1:m) {
     lv[i+1] <- aa*yt[i] + (1-aa)*(lv[i]+bv[i]) 
     bv[i+1] <- bb*(lv[i+1]-lv[i]) + (1-bb)*bv[i] 
@@ -255,12 +273,12 @@ holtwinter <- function(data){
     sv[i+1] <- gg*(yt[i]-lv[i]-bv[i]) + (1-gg)*sv[i+1-m]
   }
   
-  #forecast for a duration defined above
+  #forecast for a duration defined in the simulation parameters above
   kk <- seq(1,fc,1)
   ik <- floor((kk-1)/m)
   yf <- lv[i+1] + bv[i+1] * kk + sv[i+1+kk-m*(ik+1)]
   
-  #combine and interpolate data to return it to the previous resolution
+  #combine the known and forecast data and use a function to scale it up proportionately to the needed for the app
   modelled_data <- c(lv,yf)
   return_data <- interpolate_data(modelled_data, round(length(data)*((cut+fc)/cut)))
   return(return_data)
@@ -277,7 +295,7 @@ dates <- data$Date
 start_date_index <- which(data$Date == '2020-07-01')
 end_date_index <- length(data$Date)
 
-#prepare all the data for the forecast plot
+#prepare all the data for the forecast plot and store it in variables that can be accessed by the app
 #WC1
 wc1.obs <- smooth_data(data$WC1,0.025,1250)[start_date_index:end_date_index]
 wc1.model <- holtwinter(wc1.obs)
@@ -315,13 +333,15 @@ date_pad <- as.character((get_dates_sequence(date.fc[length(date.fc)], ((length(
 date.fc <- append(date.fc,date_pad)
 
 
-### - Using the long term forecast to optimise the number of stations - ###
+### - Using the long term forecast to optimize the number of stations needed in 2024 - ###
 
-#function that finds the optimal number of stations for a given set of data
+#function that finds the optimal number of stations for a given set of data given the max allowed daily activity per station
 find_optimal <- function(data,max.station){
   
-  #define the loss function for Santader bike stations
-  #Max capacity is x*150 where x is the number of stations in a postcode
+  #define an embedded function that can be used as a loss function for the optimiser.
+  #each demanded journey exceeding capacity is a loss of £1.65 and
+  #each jounney that doesn't meet capacity is a loss proportional to the cost of the station
+  #spread of a year and the maintence costs, it is assumed to be £4.78
   loss <- function(error){
     if (error>0){
       loss <- error*1.65
@@ -331,21 +351,23 @@ find_optimal <- function(data,max.station){
     return (abs(loss))
   }
   
-  #function used to iterate and optimize the number of stations
+  #function get the total loss for the error across the year
   total_loss <- function(n.stations){
     error <- data - n.stations*max.station
     loss <- sapply(error, loss)
     return(sum(loss))
   }
   
-  #use optimization to find the number of stations with the lowest value
+  #use Brent optimisation and the loss function defined above to minimise the total loss over the set duration
+  #by finding the optimal number of stations in the postcode
   optimal <- optim(par = 10, fn = total_loss, method = "Brent", lower = 0, upper = 50)
   return(round(optimal[1][[1]],digits=0))
 }
 
-#repeat function but return loss when number of stations is not optimal
+#repeat the previous function but return the total loss when number of stations is not optimal
 loss_n_station <- function(data, n.stations, max.station){
   
+  #this function uses the same loss function per day
   loss <- function(error){
     if (error>0){
       loss <- error*1.65
@@ -355,6 +377,7 @@ loss_n_station <- function(data, n.stations, max.station){
     return (abs(loss))
   }
   
+  #this function uses the same loss function over the whole duration of data
   total_loss <- function(n.stations){
     error <- data - n.stations*max.station
     loss <- sapply(error, loss)

@@ -1,11 +1,10 @@
+#load in libraries needed to process the data
 library(lubridate)
 library(data.table)
 library(dplyr)
 library(ggplot2)
 
-#set the wd 
-#setwd("C:/Users/Rory.Bateman/OneDrive/Documents/GitHub/TFL-Bike-Hire-Forecaster")
-
+#use the data from the large dara set with station by station activity
 dailyactivity <- read.csv("data/tfl-bike-daily-activity-central-london.csv")
 
 #Getting a list of all stations within London along with their postcodes
@@ -56,14 +55,10 @@ stationexrtraction.list <- function(stationset,postcodes){
   return(postcodestations)
 }
 
+#create the list of postcodes and their stations
 stationinfon <- stationexrtraction.list(stationinfo,twol)
 
-# plot daily activty of the stations within a postcode area
-
-
-
-#splits a data frame into a new data frame containing only the locations within a 
-#a postcode area
+#splits a data frame into a new data frame containing only the locations within a postcode area
 listofdataframes <- list()
 ls <- list()
 i = 1
@@ -72,6 +67,7 @@ for( i in 1:length(stationinfon)){
   listofdataframes[[i]] <- dailyactivity[ls]
 }
 
+#loop through all the postcode stations and count their activity
 i = 1
 postcode.activity<- data.frame(matrix(NA, nrow = 1321, ncol = 0))
 dailyactivity.date <- data.frame()
@@ -85,14 +81,14 @@ for( i in 1:length(stationinfon)){
   postcode.activity[twol[i]] <- df
 }
 
+# find means and standard deviation
 postcode.activity.means <-colMeans(postcode.activity[-c(1,8)]) 
-
 postcode.activity.standarddeviation <- sapply(postcode.activity[-c(1,8)], sd)
 
 #add the weekday information to the data frame
 postcode.activity["Weekday"] <- weekdays(postcode.activity$Date)
 
-#plot the data to see any relationships and export the data
-#ggplot(postcode.activity) +geom_point(aes(Date, WC1,color=ifelse(weekday %in% c("Friday","Saturday","Sunday"), 'red', 'black')))+ theme(legend.position="none")
-write.csv(postcode.activity, "daily-activity-by-postcode.csv")
+#export the data that now has a column for each central london postcode and the daily activity
+#this data will be used by all other data processing files
+write.csv(postcode.activity, "data/daily-activity-by-postcode.csv")
 

@@ -1,3 +1,4 @@
+#load in libraries that are needed to restructure the data to extract features for training
 library(lubridate)
 library(data.table)
 library(dplyr)
@@ -17,11 +18,11 @@ library(openair)
 #- [x]  X8 - temperature on the day
 #- [x]  X9 - (1) if work week (-1) if weekend
 
-#reading data in
+#reading data from the daily activity for each postcode and weather data obtained from here https://www.visualcrossing.com/weather-api
 dailyactivity <- read.csv("data/daily-activity-by-postcode.csv")
 weatherdata <- read.csv("data/weather-data.csv")
 
-#function to smooth data
+#function to exponentially smooth data
 smooth_data <- function(data,alpha,starting_value){
   
   #define parameters
@@ -63,6 +64,8 @@ colnames(Location.features) <- c("Date", "Daydemand", "Demand1dayago", "Demand7d
                                  "Meanpast30days", "Meanpast365days", "Tempofday",
                                  "Wind","Raincover","dayofweek")
 
+#fill in template with features that are common to all postcodes
+#the dates and weather data
 Location.features$Date <- dailyactivity.train$Date
 Location.features$Tempofday <- weather_train_data.1_28$temp
 Location.features$Raincover <- weather_train_data.1_28$precipcover
@@ -116,7 +119,7 @@ Location.features.WC1$Meanpast7days <- mean_array(dailyactivity$WC1,7)
 Location.features.WC1$Meanpast30days <- mean_array(dailyactivity$WC1,28)
 Location.features.WC1$Meanpast365days <- mean_array(dailyactivity$WC1,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.WC1 <- apply(Location.features.WC1,2,as.character)
 write.csv(Location.features.WC1, "data/feature-data/WC1-feature-data.CSV", row.names=FALSE)
 
@@ -137,7 +140,7 @@ Location.features.WC2$Meanpast7days <- mean_array(dailyactivity$WC2,7)
 Location.features.WC2$Meanpast30days <- mean_array(dailyactivity$WC2,30)
 Location.features.WC2$Meanpast365days <- mean_array(dailyactivity$WC2,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.WC2 <- apply(Location.features.WC2,2,as.character)
 write.csv(Location.features.WC2, "data/feature-data/WC2-feature-data.CSV", row.names=FALSE)
 
@@ -158,7 +161,7 @@ Location.features.EC1$Meanpast7days <- mean_array(dailyactivity$EC1,7)
 Location.features.EC1$Meanpast30days <- mean_array(dailyactivity$EC1,30)
 Location.features.EC1$Meanpast365days <- mean_array(dailyactivity$EC1,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.EC1 <- apply(Location.features.EC1,2,as.character)
 write.csv(Location.features.EC1, "data/feature-data/EC1-feature-data.CSV", row.names=FALSE)
 
@@ -179,7 +182,7 @@ Location.features.EC2$Meanpast7days <- mean_array(dailyactivity$EC2,7)
 Location.features.EC2$Meanpast30days <- mean_array(dailyactivity$EC2,30)
 Location.features.EC2$Meanpast365days <- mean_array(dailyactivity$EC2,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.EC2 <- apply(Location.features.EC2,2,as.character)
 write.csv(Location.features.EC2, "data/feature-data/EC2-feature-data.CSV", row.names=FALSE)
 
@@ -200,7 +203,7 @@ Location.features.EC3$Meanpast7days <- mean_array(dailyactivity$EC3,7)
 Location.features.EC3$Meanpast30days <- mean_array(dailyactivity$EC3,30)
 Location.features.EC3$Meanpast365days <- mean_array(dailyactivity$EC3,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.EC3 <- apply(Location.features.EC3,2,as.character)
 write.csv(Location.features.EC3, "data/feature-data/EC3-feature-data.CSV", row.names=FALSE)
 
@@ -221,7 +224,7 @@ Location.features.EC4$Meanpast7days <- mean_array(dailyactivity$EC4,7)
 Location.features.EC4$Meanpast30days <- mean_array(dailyactivity$EC4,30)
 Location.features.EC4$Meanpast365days <- mean_array(dailyactivity$EC4,365)
 
-#outputs the dat toa csv file
+#outputs the data to a csv file
 Location.features.EC4 <- apply(Location.features.EC4,2,as.character)
 write.csv(Location.features.EC4, "data/feature-data/EC4-feature-data.CSV", row.names=FALSE)
 

@@ -90,7 +90,7 @@ common_values_df <- common_values_df[, !names(common_values_df) == "London"]
 df_filtered <- subset(common_values_df, grepl("^EC|^WC", Postcode))
 
 #export csv files for both data sets
-write.csv(df_filtered, "station-postcodes-central.csv")
-write.csv(common_values_df, "station-postcodes.csv")
+write.csv(df_filtered, "data/station-postcodes-central.csv")
+write.csv(common_values_df, "data/station-postcodes.csv")
 
 

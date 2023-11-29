@@ -1,12 +1,25 @@
+#this code will not run now!
+
+#it processes and condenses a massive data set that was generated in data-extraction.R
+#it is not stored on the github
+#the code just gives insight into how we extracted the data we used in the app
+
 # Read the data from the CSV files and extract the station names
+#the data is not in the github repository
 data <- read.csv("WC_W1_EC_data.csv")
-stations <- read.csv("station-postcodes-central.csv")
+stations <- read.csv("data/station-postcodes-central.csv")
+
+#make all the dates strings
 data$Start.date <- as.character(data$Start.date)
+
+#extract all the station names
 station_names <- stations$`Station`
 
 #create a function reformat the date so it is consistent throughout
 #in the format '2018-11-21 06:54'
 reformat_date <- function(date_str) {
+  
+  #check if a date as a forward slash to indentify how it is currently formatted
   if (grepl("/", date_str)) {
     year_characters <- substr(date_str, 7, 10)
     month_characters <- substr(date_str, 4, 5)
@@ -14,6 +27,7 @@ reformat_date <- function(date_str) {
     time_part <- substr(date_str, 12, 16)
     reformatted_date <- paste0(year_characters, "-", month_characters, "-", day_characters, " ", time_part)
   } else {
+    
     # Date string doesn't contain a "/", keep it as is
     reformatted_date <- date_str
   }
@@ -23,7 +37,7 @@ reformat_date <- function(date_str) {
 #run the date reformatting function on the data
 data$Start.date <- sapply(data$Start.date, reformat_date)
 
-#sort all the rows so they appear in chronological order
+#sort all the rows so they appear in chronological order, older files from tfl do not order the journeys made in a day
 sorted_indices <- order(data$Start.date)
 data <- data[sorted_indices, ]
 
@@ -80,7 +94,8 @@ add_data <- function(hour,df) {
 # Create an empty data frame for the reformatted data
 df <- data.frame()
 
-#create a list of all available times in the data
+#create a list of all available dates in the data
+
 #find the first and last date and hour in the data set
 first_date <- sub(":.*", "", data$Start.date[1])
 last_date <- sub(":.*", "", data$Start.date[nrow(data)])
@@ -113,7 +128,7 @@ last_year_chars <- substr(last_date, 1, 4)
 last_year <- as.numeric(last_year_chars)
 goal_hours <- (last_year * 8064) + (last_month * 672) + (last_day*24)
 
-# set up while loop to iterate with an hour at a time until the total hours
+# set up while loop to iterate with a day at a time until the total hours
 #is greater than the total hours defined by the end date
 while (((year * 8064) + (month * 672) + (day*24)) < goal_hours) {
   
@@ -149,6 +164,6 @@ for (i in available_dates) {
 #add the relevant headers and export the csv
 column_names <- c("Hour", station_names)
 colnames(df) <- column_names
-write.csv(df, "hourly-data-central.csv")
+write.csv(df, "data/hourly-data-central.csv")
 
 
