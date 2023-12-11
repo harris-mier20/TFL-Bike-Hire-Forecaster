@@ -1,4 +1,5 @@
 #install libraries to run app and style
+#some of these libraries are used in files in sub folders.
 library(shiny)
 library(leaflet)
 library(shinydashboard)
@@ -6,6 +7,13 @@ library(fresh)
 library(sf)
 library(emojifont)
 library(shinyjs)
+library(lubridate)
+library(data.table)
+library(dplyr)
+library(ggmap)
+library(opencage)
+library(tidyr)
+library(openair)
 
 #load in the file that defines all the postcode region borders
 source("data-processing/create-map-regions.R")
@@ -65,7 +73,7 @@ ui <- dashboardPage(
         
         #explain what the daily activity is
         div(style = "height: 15px;"),
-        div("The 'Daily Activity' or 'Daily Demand' of a postcode is defined as the total number of journeys in or out of a bike station
+        div("The 'Daily Activity' or 'Daily Demand' of a postcode is defined as the sum of journeys made in or out of any bike station
           within the postcode in a single day.", style = text_body),
         
         #tick list to select what info to show on the app.
@@ -161,7 +169,7 @@ ui <- dashboardPage(
         #Explain what the simulation is showing, the parameters are set in the data-processing.R file
         div(style = "height: 25px;"),
         div("Below is a stochastic simulation to emulate the variable probability
-            of bike entering and leaving a central london postcode throughout 
+            of bike entering or leaving a central london postcode throughout 
             a working day. Here you are able to adjust the daily 
             activity per station in the postcode to determine when docking
             demand will exceed infrastructure capacity.", style = text_body),
@@ -184,7 +192,7 @@ ui <- dashboardPage(
         #add slider so user can select the daily activity, this will update the simultion plot above
         div(style = "height: 25px;"),
         tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: red}")),
-        sliderInput("ActivitySlider", "Select Daily Activity", min = 65, max = 165, value = 115, width = "100%"),
+        sliderInput("ActivitySlider", "Select Max. Activity Per Station", min = 65, max = 165, value = 115, width = "100%"),
         
         #end section with baseline
         div(style = "height: 30px;border-bottom: 2px solid white;"),
@@ -294,13 +302,13 @@ ui <- dashboardPage(
         
         #explanation of how we optimise the number of stations that should be built, this is done in data-processing.R
         div(style = "height: 30px;"),
-        div("We have defined a loss function to optimise the number of stations in each postcode, minimising lost revenue for TFL.
-            We acount for loss of £1.65 for each demanded journey that exceeds the capacity of the system, assuming the capaciy of the postcode is 
-            the maximum daily activity per station (determined with the simulation above) multiplied by the number of stations in the postcode.", style = text_body),
+        div("A loss function has been defined to optimise the number of stations in each postcode, minimising lost revenue.
+            F each demanded journey that exceeds the capacity of the system, £1.65 is lost. Assuming the capaciy of the postcode is 
+            the maximum daily activity per station (determined with the simulation above and adjusted below) multiplied by the number of stations in the postcode.", style = text_body),
         div(style = "height: 10px;"),
-        div("On the other hand, when daily capacity exceeds daily demand, we assume that a proportion of the daily cost of a station
-            is wasted and contributes to lost revenue. The cost to build a station is £197,000, by spreading this cost across the year and combining it
-            with small maintence costs, we assume a lost revenue of £4.78 for every journey short of the maximum daily capacity", style = text_body),
+        div("On the other hand, when daily capacity exceeds daily demand, a proportion of the daily cost of a station
+            is wasted, contributing to lost revenue. The cost to build a station is £197,000, by spreading this cost across the year and combining it
+            with small maintence costs, a lost revenue of £4.78 is assumed for every journey short of the maximum daily capacity", style = text_body),
         div(style = "height: 10px;"),
         div("Adjust the maximum allowed daily activity per station to determine the optimal number of new stations that should be built in this postcode for 2024. The simulation above
             identifies an activity of 115 to be a suitable maximum.", style = text_body),
@@ -309,11 +317,11 @@ ui <- dashboardPage(
         #this should be informed by the simulation
         div(style = "height: 25px;"),
         tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: red}")),
-        sliderInput("ActivitySlider2", "Choose the maximum allowed daily activity per station", min = 65, max = 165, value = 115, width = "100%"),
+        sliderInput("ActivitySlider2", "Select Max. Activity Per Station", min = 65, max = 165, value = 115, width = "100%"),
         
         #Title for Bar plot
         div(style = "height: 25px;"),
-        div("How Many Stations Should be Built", style = plot_style),
+        div("Number of Stations that Should be Built", style = plot_style),
         
         # bar plot showing how many stations should be built for all postcodes, highlighting the current selected postcode.
         div(style = "height: 5px;"),
@@ -392,10 +400,10 @@ server <- function(input, output, session) {
   #show a model when the app launches, this tells the user a bit about the app and its purpose
   showModal(
     modalDialog(
-      title = "How Many New Docking Stations are Needed in Central London for 2024?", "TFL must proactively expand the Santander bike docking
-      station infrastructure in central London. To maximise profit, TFL must minimise the lost revenue from not meeting the growth in
-      future demand, while not over spending on unecessary infrastructure. Cick postcode regions on the map to view specific details and forecasts and
-      an interactive recommendation of how many stations should be built.",
+      title = "TFL Bike Hire Demand: Forecasting and Planning", "TFL must proactively expand the Santander bike docking
+      station infrastructure in central London. For optimal resource allocation, TFL must minimise the lost revenue from not meeting the growth in
+      demand, while not over spending on unecessary infrastructure. Cick postcode regions on the map to view specific details, forecasts and
+      interactive prescriptive analytics.",
       footer = actionButton("modalOkBtn", "OK")
     )
   )
@@ -707,10 +715,10 @@ server <- function(input, output, session) {
     shortforecast_fc <- get(paste0(rv$postcode,".predict"))
     
     #only show the most important features to avoid cluttering the app
-    output$'1day' <- renderText(round(vars[2],digits=2))
-    output$'temp' <- renderText(round(vars[6],digits=2))
-    output$'wind' <- renderText(round(vars[7],digits=2))
-    output$'rain' <- renderText(round(vars[8],digits=2))
+    output$'1day' <- renderText(paste0("x  " , as.character(round(vars[2],digits=2))))
+    output$'temp' <- renderText(paste0("x  " , as.character(round(vars[6],digits=2))))
+    output$'wind' <- renderText(paste0("x  " , as.character(round(vars[7],digits=2))))
+    output$'rain' <- renderText(paste0("x  " , as.character(round(vars[8],digits=2))))
     
     #render the rmse of the model to give an indication of validation of the forecast
     output$rmse <- renderText(rmse)

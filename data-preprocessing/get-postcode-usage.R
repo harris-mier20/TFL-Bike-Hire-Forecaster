@@ -2,7 +2,6 @@
 library(lubridate)
 library(data.table)
 library(dplyr)
-library(ggplot2)
 
 #use the data from the large dara set with station by station activity
 dailyactivity <- read.csv("data/tfl-bike-daily-activity-central-london.csv")
